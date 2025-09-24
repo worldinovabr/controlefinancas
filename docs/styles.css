@@ -1,3 +1,24 @@
+#add-expense .btn-plus {
+  background: none !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+#add-income, #add-expense {
+  background: #e0e5ec;
+  border-radius: 16px;
+  box-shadow:
+    8px 8px 16px #b8bac0,
+    8px 8px 16px #ffffff;
+  padding: 20px 32px;
+  color: #222;
+  border: none;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+#add-income .btn-plus {
+  background: none !important;
+  color: #3fde7f !important;
+  box-shadow: none !important;
+}
 .nav-item-wrap {
   display: flex;
   flex-direction: column;
@@ -99,7 +120,7 @@
 :root{
   /* Neumorphic palette */
   --bg:#47e3e352; /* soft background */
-  --card:#47e3e31c; /* lifted card */
+  --card:#f8fbfbb9; /* lifted card */
   --nav-item-w:96px;
   --muted:#6b7280;
   --accent:#3fde7f; /* green */
@@ -115,18 +136,22 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .topbar{padding:24px 48px;min-height:80px}
 .topbar .brand{font-weight:700}
 /* Brand background to improve visibility */
-.topbar .brand{
-  background: #65a43bf4; /* dark / black-like background */
-  padding:8px 42px; /* further increased horizontal padding per user request */
-  border-radius:10px;
-  background: linear-gradient(90deg, #47e3e369 0%, #47e3e369 50%, #47e3e369 100%);
-  display:inline-block;
-  color: #ffffff; /* white text */
-  white-space:nowrap; /* keep brand on a single line */
-  overflow:hidden;
+.topbar .brand {
+  background: #e0e5ec;
+  border-radius: 16px;
+  box-shadow:
+    8px 8px 16px #b8bac0,
+    -8px -8px 16px #ffffff;
+  padding: 20px 32px;
+  color: #222;
+  border: none;
+  transition: box-shadow 0.2s, background 0.2s;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
   width: 310px;
   margin-left: -8px;
-  text-overflow:ellipsis;
+  text-overflow: ellipsis;
 }
 .topbar .nav{
   display: flex;
@@ -181,12 +206,22 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
   display:inline-block;
   padding:8px 18px;
   border-radius:12px;
-  background: linear-gradient(90deg, #abaeae 0%, #eff0f0 50%, #abaeae 100%);
-  color:#141313;
+  background: linear-gradient(90deg, #4a4a4a 0%, #565757 50%, #4a4a4a 100%);
+  color:#f6f3f3;
   box-shadow: 0 6px 18px rgba(16,24,40,0.06), inset 0 1px 0 rgba(255,255,255,0.06);
   font-weight:700;
   width: 300px;
   letter-spacing:0.6px;
+  background: #e0e5ec;
+  border-radius: 16px;
+  box-shadow:
+    8px 8px 16px #b8bac0,   /* sombra escura */
+    -8px -8px 16px #ffffff;  /* sombra clara */
+  padding: 20px 32px;
+  color: #222;
+  border: none;
+  transition: box-shadow 0.2s, background 0.2s;
+
 }
 
 @media (max-width:480px){
@@ -214,7 +249,17 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .btn{border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg,var(--card),#eef4fb);padding:8px 12px;border-radius:12px;cursor:pointer;box-shadow:4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light)}
 .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
-.card{background:var(--card);padding:18px;border-radius:12px;border:1px solid #eee}
+.card {
+  background: #e0e5ec;
+  border-radius: 16px;
+  box-shadow:
+    8px 8px 16px #b8bac0,
+    -8px -8px 16px #ffffff;
+  padding: 20px 32px;
+  color: #222;
+  border: none;
+  transition: box-shadow 0.2s, background 0.2s;
+}
 
 /* Make the credit card visually larger and more prominent */
 .card.credit-card.credit-bg{
@@ -719,7 +764,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .controls-center #add-expense{
   background: linear-gradient(180deg,#2563eb,#1e40af);
   color: #fff;
-  box-shadow: 12px 12px 24px rgba(14,46,168,0.12), -12px -12px 24px rgba(255,255,255,0.9);
+  box-shadow: none !important;
 }
 .controls-center #add-expense .btn-plus{ color: #fff; }
 /* Ensure the + icon inside both header circular buttons is white */
@@ -727,7 +772,16 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .controls-center #add-expense:active{ box-shadow: 6px 8px 18px rgba(14,46,168,0.06); background: linear-gradient(180deg,#1e40af,#1e3a8a); }
 
 /* Tighter icon + label alignment for the screenshot-like pills */
-.nav-item{flex-direction:column;gap:4px;padding-top:6px;padding-bottom:6px}
+.nav-item{
+  flex-direction:column;
+  gap:4px;
+  padding-top:6px;
+  padding-bottom:6px;
+  background: #e0e5ec;
+  border-radius: 20px;
+  box-shadow: 12px 12px 24px rgba(16,24,40,0.10), -12px -12px 24px rgba(255,255,255,0.9);
+  transition: box-shadow 0.2s, background 0.2s;
+}
 .nav-label{font-size:12px}
 
 /* Keep pill width but allow icons to breathe on small screens */
@@ -768,7 +822,14 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 
 /* Notice body: separate title and meta so we can align lines consistently */
 #upcoming-notices .notice .notice-body strong{display:block;font-weight:700;margin-bottom:4px}
-#upcoming-notices .notice .notice-body .meta{font-size:12px;color:var(--muted);margin-top:0}
+#upcoming-notices .notice .notice-body .meta{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:0;
+  display: block;
+  width: 100%;
+  margin-bottom: 2px;
+}
 
 /* Standardize category inline blocks used in lists */
 .cat-inline{display:flex;align-items:center;gap:10px}

@@ -398,7 +398,7 @@
               const paid = t.installmentsPaid || 0;
               const per = t.perInstallment || (t.value / t.installmentsTotal);
               const left = Math.max(0, (t.installmentsTotal||0) - paid);
-              installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas — ${left} faltam — R$ ${formatMoney(per)}</div>`;
+              installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas: ${left} faltam: R$ ${formatMoney(per)}</div>`;
             }
             const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
             div.innerHTML = `
