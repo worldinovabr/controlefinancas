@@ -96,27 +96,53 @@
 .hidden{display:none !important}
 *{box-sizing:border-box}
 body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);margin:0;color:#111}
-.topbar{display:flex;align-items:center;gap:16px;padding:18px 26px;background:var(--card);border-radius:14px;margin:12px 20px;box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light)}
-.topbar{padding:24px 29px;min-height:90px}
+.topbar{display:flex;align-items:center;gap:16px;padding:18px 40px;background:var(--card);border-radius:14px;margin:12px 20px;box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light)}
+.topbar{padding:24px 48px;min-height:90px}
 .topbar .brand{font-weight:700}
-.topbar .nav{display:flex;gap:12px;flex:1}
-.nav-item{padding:8px 14px;border-radius:14px;color:var(--muted);text-decoration:none;font-size:15px}
-.nav-item{padding:8px 14px;border-radius:12px;color:var(--muted);text-decoration:none;font-size:15px;background:linear-gradient(180deg, var(--card), #eef6ff);box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light)}
-.nav-item.active{background:linear-gradient(180deg,#0b1220,#0f172a);color:#fff;padding:8px 16px;border-radius:12px;box-shadow: inset 4px 4px 8px rgba(0,0,0,0.15)}
+.topbar .nav{display:flex;gap:6px;flex:1}
+.nav-item{padding:6px 10px;border-radius:14px;color:var(--muted);text-decoration:none;font-size:15px}
+.nav-item{padding:6px 10px;border-radius:12px;color:var(--muted);text-decoration:none;font-size:15px;background:var(--card);box-shadow: 14px 14px 36px rgba(163,177,198,0.38), -14px -14px 36px rgba(255,255,255,0.92);transition:box-shadow 200ms ease, transform 180ms ease, background 180ms ease}
+.nav-item.active{background:linear-gradient(180deg,#0b1220,#0f172a);color:#fff;padding:8px 16px;border-radius:12px;box-shadow: inset 6px 6px 20px rgba(0,0,0,0.24), inset -6px -6px 20px rgba(255,255,255,0.02)}
 .topbar .saldo{font-size:12px;text-align:right}
 .topbar .saldo-val{color:var(--accent);font-weight:700}
-.container{max-width:1100px;margin:20px auto;padding:0 16px}
+.container{max-width:1100px;margin:20px auto;padding:0 32px}
 .header-row{display:flex;align-items:flex-start;gap:20px}
 .header-row{display:flex;align-items:center;gap:8px;position:relative}
 .header-row h1{margin:0;text-align:center}
 .header-row .subtitle{margin:6px 0;color:var(--muted);text-align:center}
 .title-wrap{flex:1 1 60%;min-width:220px;display:flex;flex-direction:column;align-items:center}
-.controls-center{flex:0 1 40%;display:flex;gap:20px;align-items:center;justify-content:center;flex-wrap:nowrap;margin-top:12px}
-.controls-center .btn{flex:0 0 auto;min-width:120px;padding:8px 10px}
+.controls-center{flex:0 1 40%;display:flex;gap:63px;align-items:center;justify-content:center;flex-wrap:nowrap;margin-top:12px}
+.controls-center .btn{flex:0 0 auto;min-width:120px;padding:8px 10px;margin:0 14px}
+/* push first btn-group to the left and last to the right */
+.controls-center .btn-group:first-child{margin-right:auto}
+.controls-center .btn-group:last-child{margin-left:auto}
 .btn{border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg,var(--card),#eef4fb);padding:8px 12px;border-radius:12px;cursor:pointer;box-shadow:4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light)}
 .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
 .card{background:var(--card);padding:18px;border-radius:12px;border:1px solid #eee}
+
+/* Make the credit card visually larger and more prominent */
+.card.credit-card.credit-bg{
+  padding:42px 36px;
+  border-radius:20px;
+  min-height:320px;
+}
+
+/* On desktop, let the credit card span two grid columns to increase width */
+@media (min-width: 901px){
+  .cards{grid-template-columns:repeat(4,1fr)}
+  .card.credit-card.credit-bg{grid-column: span 2;}
+}
+
+/* Medium screens: slightly smaller but still prominent */
+@media (max-width:900px) and (min-width:601px){
+  .card.credit-card.credit-bg{padding:36px 28px;min-height:300px}
+}
+
+/* Small screens: keep card full-width but taller */
+@media (max-width:600px){
+  .card.credit-card.credit-bg{padding:28px 20px;min-height:260px}
+}
 .card.highlight{box-shadow:0 6px 18px rgba(16,185,129,0.06)}
 .card-title{font-size:13px;color:var(--muted)}
 .card-value{font-size:20px;font-weight:700;margin-top:8px}
@@ -202,7 +228,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
   .topbar .nav{width:100%;display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
   .nav-item{font-size:14px;padding:8px 10px}
   .topbar .saldo{align-self:flex-end;font-size:12px}
-  .container{padding:10px}
+  .container{padding:16px}
   .cards{grid-template-columns:1fr;gap:10px}
   .card{padding:14px}
   .month-summary{grid-template-columns:1fr;gap:10px}
@@ -221,9 +247,20 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
   .report-legend, #report-legend-cats{font-size:13px}
 }
 
+/* scale header action buttons for small devices */
+@media (max-width:420px){
+  .controls-center .btn{width:52px;height:52px;min-width:52px;min-height:52px;max-width:52px;max-height:52px;margin:0 14px}
+  .controls-center .btn .btn-plus{width:36px;height:36px}
+}
+
+@media (max-width:360px){
+  .controls-center .btn{width:48px;height:48px;min-width:48px;min-height:48px;margin:0 14px}
+  .controls-center .btn .btn-plus{width:32px;height:32px;font-size:1.1rem}
+}
+
 /* Slightly smaller layout for small tablets */
 @media (min-width:481px) and (max-width:900px){
-  .container{padding:12px}
+  .container{padding:18px}
   .cards{grid-template-columns:repeat(2,1fr);gap:12px}
   .chart-wrap{width:100%;height:240px}
   #chart-by-category{width:100% !important;height:240px !important}
@@ -232,7 +269,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 /* finer mobile breakpoints */
 @media (max-width:360px){
   body{font-size:13px}
-  .nav-item{padding:4px 8px;font-size:12px;margin-right:6px}
+  .nav-item{padding:4px 6px;font-size:12px;margin-right:4px}
   .chart-wrap{height:180px}
   #chart-by-category{height:180px !important}
 }
@@ -247,7 +284,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 /* targeted fixes for 400px wide mobile devices (e.g. 400x850) */
 @media (max-width:420px){
   html,body{overflow-x:hidden}
-  .container{max-width:400px;padding:8px;margin:0 auto}
+  .container{max-width:400px;padding:12px;margin:0 auto}
   .topbar{padding:10px;border-radius:0}
   .brand{font-size:18px}
   .topbar .saldo{display:block;text-align:right;font-size:12px}
@@ -271,8 +308,8 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 @media (max-width:420px){
   .topbar{box-shadow: 4px 6px 10px rgba(163,177,198,0.25), -4px -4px 10px rgba(255,255,255,0.85)}
   .topbar{display:flex;flex-direction:column;align-items:flex-start}
-  .topbar .nav{display:flex;overflow-x:auto;white-space:nowrap;width:100%;padding:6px 0;margin:6px 0}
-  .nav-item{display:inline-block;flex:0 0 auto;margin-right:6px;padding:5px 8px;border-radius:12px;font-size:12px;box-shadow:2px 2px 6px rgba(163,177,198,0.22), -2px -2px 6px rgba(255,255,255,0.9);width:var(--nav-item-w);max-width:100%;text-align:center;box-sizing:border-box}
+  .topbar .nav{display:flex;overflow-x:auto;white-space:nowrap;width:100%;padding:4px 0;margin:4px 0}
+  .nav-item{display:inline-block;flex:0 0 auto;margin-right:4px;padding:4px 6px;border-radius:12px;font-size:12px;box-shadow:2px 2px 6px rgba(163,177,198,0.22), -2px -2px 6px rgba(255,255,255,0.9);width:var(--nav-item-w);max-width:100%;text-align:center;box-sizing:border-box}
   .nav-item.active{padding:5px 10px}
   /* keep controls on a single compact row */
   .header-row .controls{display:flex;flex-wrap:nowrap;gap:8px;margin-top:8px}
@@ -284,7 +321,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 /* ultra-targeted: exact-400px width tweaks to match screenshot proportions */
 @media (max-width:400px){
   html,body{overflow-x:hidden}
-  .container{max-width:400px;padding:6px;margin:0 auto}
+  .container{max-width:400px;padding:10px;margin:0 auto}
   .topbar{padding:8px 10px}
   .brand{font-size:16px}
   .topbar .nav{padding:4px 0;margin:4px 0;gap:4px}
@@ -300,7 +337,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .legend-dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;box-shadow:0 1px 2px rgba(0,0,0,0.08);vertical-align:middle}
 
 /* nav icon + label layout */
-.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
 .nav-icon{display:inline-flex;width:28px;height:20px;align-items:center;justify-content:center}
 .nav-img{width:26px;height:26px;display:block;object-fit:contain}
 .nav-item.active .nav-img{filter:none}
@@ -309,17 +346,16 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .nav-item.active{box-shadow: inset 3px 3px 6px rgba(0,0,0,0.12)}
 .nav-label{font-size:13px;line-height:1;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* Enhanced visuals for nav pills and header buttons (mirrored from src) */
 .nav-item{
-  background: linear-gradient(180deg,#fbfdff,#eef6ff);
+  background: var(--card);
   border-radius:16px;
-  padding:8px 12px;
-  box-shadow: 6px 6px 18px rgba(16,24,40,0.06), -6px -6px 18px rgba(255,255,255,0.85);
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  padding:6px 10px;
+  box-shadow: 18px 18px 44px rgba(163,177,198,0.42), -18px -18px 44px rgba(255,255,255,0.95);
+  transition: transform 180ms cubic-bezier(.2,.9,.2,1), box-shadow 180ms ease, background 160ms ease;
 }
 .nav-item:hover{
-  transform: translateY(-4px) scale(1.03);
-  box-shadow: 10px 10px 22px rgba(16,24,40,0.09), -8px -8px 20px rgba(255,255,255,0.9);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 22px 22px 50px rgba(16,24,40,0.16), -20px -20px 50px rgba(255,255,255,0.98);
 }
 .nav-item:focus{outline:3px solid rgba(21,128,61,0.14);outline-offset:4px}
 .nav-item .nav-img{width:30px;height:30px}
@@ -328,28 +364,57 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .nav-item.active{
   background: linear-gradient(180deg,#0b1220,#0f172a);
   color:#fff;
-  transform:translateY(-2px) scale(1.04);
-  box-shadow: inset 3px 3px 10px rgba(0,0,0,0.15), 6px 6px 20px rgba(0,0,0,0.08);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: inset 8px 8px 26px rgba(0,0,0,0.22), inset -8px -8px 26px rgba(255,255,255,0.03);
 }
 
 /* Header action buttons (controls-center) */
 .controls-center .btn{
   border-radius:50%;
-  width:48px;
-  height:48px;
-  min-width:48px;
-  min-height:48px;
-  max-width:48px;
-  max-height:48px;
+  width:56px;
+  height:56px;
+  min-width:56px;
+  min-height:56px;
+  max-width:56px;
+  max-height:56px;
   padding:0;
   font-size:1.6rem;
   display:flex;align-items:center;justify-content:center;
-  background: #f6f9fc;
-  box-shadow: 10px 10px 18px #e9eef5, -10px -10px 18px #fff;
+  background: linear-gradient(180deg, #f8fbfe, #eef6fb);
+  box-shadow: 18px 18px 36px rgba(163,177,198,0.35), -18px -18px 36px rgba(255,255,255,0.95);
   border: none;
   margin: 0;
-  transition: box-shadow 0.18s, background 0.18s, transform 0.12s;
+  transition: box-shadow 180ms ease, background 180ms ease, transform 160ms cubic-bezier(.2,.9,.2,1);
 }
+
+/* inner '+' badge: colored circular gradient with inner highlight */
+.controls-center .btn .btn-plus{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  font-weight:800;
+  font-size:1.2rem;
+  line-height:1;
+  color:#ffffff;
+  background: linear-gradient(180deg,#06b6d4,#0ea5e9);
+  box-shadow: inset 4px 6px 18px rgba(255,255,255,0.45), inset -6px -8px 18px rgba(0,0,0,0.08), 6px 10px 20px rgba(16,24,40,0.08);
+  transform: translateZ(0);
+}
+
+/* primary (income) variant: green plus */
+.controls-center .btn.primary .btn-plus{
+  background: linear-gradient(180deg,#34d399,#10b981);
+  box-shadow: inset 4px 6px 18px rgba(255,255,255,0.45), inset -6px -8px 18px rgba(0,0,0,0.06), 6px 10px 20px rgba(16,24,40,0.06);
+}
+
+/* hover/active states */
+.controls-center .btn:hover{ transform: translateY(-4px); box-shadow: 26px 26px 54px rgba(16,24,40,0.14), -24px -24px 54px rgba(255,255,255,0.98); }
+.controls-center .btn:active{ transform: translateY(0); box-shadow: 8px 8px 20px rgba(16,24,40,0.08), -8px -8px 18px rgba(255,255,255,0.9); }
+.controls-center .btn:hover .btn-plus{ transform: translateY(-2px) scale(1.02); box-shadow: inset 4px 6px 18px rgba(255,255,255,0.5), inset -6px -8px 20px rgba(0,0,0,0.06), 8px 12px 26px rgba(16,24,40,0.12); }
+.controls-center .btn:active .btn-plus{ transform: translateY(0) scale(0.99); box-shadow: inset 2px 3px 10px rgba(255,255,255,0.35), inset -4px -4px 12px rgba(0,0,0,0.08); }
 
 /* Credit card summary widget (Icons8 cartao) */
 .card.credit-card.credit-bg{position:relative;padding:32px 28px;border-radius:18px;overflow:visible;/* prefer user local copy, then docs/img, then CDN */background-image: url('file:///C:/Users/wesle/Downloads/cartao.png'), url('img/card-bg.png'), url('https://img.icons8.com/fluency/340/000000/credit-card.png');background-repeat:no-repeat;background-size:cover;background-position:center;min-height:240px}
@@ -543,11 +608,9 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
   .card.credit-card .credit-name{font-size:12px;font-weight:700;letter-spacing:0.6px}
   .card.credit-card .credit-brand{font-size:16px;font-weight:800}
   .card.credit-card .credit-taxa{position:absolute;right:12px;bottom:10px;font-size:12px;opacity:0.95}
-  @media (max-width:600px){
     .card.credit-card .credit-overlay{padding:10px}
     .card.credit-card .credit-saldo{font-size:16px}
     .card.credit-card .credit-last4{font-size:14px}
-  }
 }
 .controls-center .btn:hover{transform:translateY(-3px);box-shadow:10px 12px 24px rgba(16,24,40,0.08)}
 .controls-center .btn:active{transform:translateY(0);box-shadow:6px 8px 18px rgba(16,24,40,0.04)}
@@ -566,7 +629,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .controls-center #add-expense:active{ box-shadow: 6px 8px 18px rgba(14,46,168,0.06); background: linear-gradient(180deg,#1e40af,#1e3a8a); }
 
 /* Tighter icon + label alignment for the screenshot-like pills */
-.nav-item{flex-direction:column;gap:6px;padding-top:10px;padding-bottom:10px}
+.nav-item{flex-direction:column;gap:4px;padding-top:6px;padding-bottom:6px}
 .nav-label{font-size:12px}
 
 /* Keep pill width but allow icons to breathe on small screens */
@@ -644,26 +707,25 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .report-controls button{height:36px}
 
 /* Targeted: ensure side-by-side layout at narrow 360px-width devices */
-@media (max-width:360px) {
-  .header-row{flex-direction:column;align-items:flex-start}
-  .title-wrap{width:100%;flex-basis:auto}
-  .controls-center{width:100%;justify-content:space-between;gap:8px;flex-wrap:nowrap}
-  .controls-center .btn{min-width:calc(50% - 8px);max-width:calc(50% - 8px);flex:0 0 calc(50% - 8px);padding:8px 8px}
+@media (max-width:420px){
+  .controls-center .btn{width:50px;height:50px;min-width:50px;min-height:50px;max-width:50px;max-height:50px}
+  .controls-center .btn .btn-plus{width:34px;height:34px}
 }
 
-/* Stronger: prevent nav and controls from wrapping on very narrow screens (<=380px) */
-@media (max-width:380px) {
-  .topbar .nav{flex-wrap:nowrap;overflow-x:auto;gap:18px;justify-content:center}
-  .nav-item{white-space:nowrap;flex:0 0 auto;padding:6px 8px;margin-right:15px}
+@media (max-width:360px){
+  .controls-center .btn{width:46px;height:46px;min-width:46px;min-height:46px}
+  .controls-center .btn .btn-plus{width:30px;height:30px;font-size:1.05rem}
+}
+  .topbar .nav{flex-wrap:nowrap;overflow-x:auto;gap:12px;justify-content:center}
+  .nav-item{white-space:nowrap;flex:0 0 auto;padding:6px 6px;margin-right:10px}
   /* center title and controls on exact-380px phones */
   .title-wrap{width:100%;align-items:center;text-align:center}
   /* increase lateral spacing between buttons to match requested spacing (50% larger) */
-  .controls-center{flex-wrap:nowrap;gap:18px;justify-content:center;width:100%}
+  .controls-center{flex-wrap:nowrap;gap:12px;justify-content:center;width:100%}
   /* At exact 380px phones increase buttons by 20% but keep them from overflowing */
   .controls-center .btn{flex:0 0 48%;min-width:calc(48% * 1.1);max-width:48%;padding:7px 8px;transform-origin:center center;transform:scale(1.08);margin:0}
   /* Make nav pills slightly larger to match visual weight */
-  .nav-item{transform-origin:center center;transform:scale(1.2)}
-}
+  .nav-item{transform-origin:center center}
 
 /* Small-screen horizontal scroll for nav and header buttons */
 @media (max-width:420px){
