@@ -16,18 +16,24 @@
     <div class="brand" style="letter-spacing: 2px; text-align: center; margin-left: px; padding-top: 4px; padding-bottom: 4px; color: black;">CONTROLE FINANCEIRO</div>
 
     <nav class="nav">
-      <a id="nav-dashboard" class="nav-item active" onclick="navTo('dashboard')">
-        <span class="nav-icon" aria-hidden="true"><img class="nav-img" src="https://img.icons8.com/3d-fluency/48/home.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/home.png'" alt="Home"/></span>
-        <span class="nav-label">Home</span>
-      </a>
-      <a id="nav-transactions" class="nav-item" onclick="navTo('transactions')">
-        <span class="nav-icon" aria-hidden="true"><img class="nav-img" src="https://img.icons8.com/3d-fluency/48/wallet.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/wallet.png'" alt="Transações"/></span>
-        <span class="nav-label">Transações</span>
-      </a>
-      <a id="nav-reports" class="nav-item" onclick="navTo('reports')">
-        <span class="nav-icon" aria-hidden="true"><img class="nav-img" src="https://img.icons8.com/3d-fluency/48/combo-chart.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/combo-chart.png'" alt="Relatórios"/></span>
-        <span class="nav-label">Relatórios</span>
-      </a>
+      <div class="nav-item-wrap">
+        <a id="nav-dashboard" class="nav-item active" onclick="navTo('dashboard')">
+          <span class="nav-icon" aria-hidden="true"><img class="nav-img" src="https://img.icons8.com/3d-fluency/48/home.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/home.png'" alt="Home"/></span>
+        </a>
+        <div class="nav-label">Home</div>
+      </div>
+      <div class="nav-item-wrap">
+        <a id="nav-transactions" class="nav-item" onclick="navTo('transactions')">
+          <span class="nav-icon" aria-hidden="true"><img class="nav-img" src="https://img.icons8.com/3d-fluency/48/wallet.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/wallet.png'" alt="Transações"/></span>
+        </a>
+        <div class="nav-label">Transações</div>
+      </div>
+      <div class="nav-item-wrap">
+        <a id="nav-reports" class="nav-item" onclick="navTo('reports')">
+          <span class="nav-icon" aria-hidden="true"><img class="nav-img" src="https://img.icons8.com/3d-fluency/48/combo-chart.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/combo-chart.png'" alt="Relatórios"/></span>
+        </a>
+        <div class="nav-label">Relatórios</div>
+      </div>
     <!-- Extra/settings nav removed per user request -->
     </nav>
     <div class="saldo">Saldo Atual<br><span class="saldo-val">R$ <span id="saldo">0,00</span></span></div>
