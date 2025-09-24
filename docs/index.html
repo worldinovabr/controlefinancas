@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Controle de Gastos - Simples</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Controle de Gastos</div>
+    <nav class="nav">
+      <a id="nav-dashboard" class="nav-item active" onclick="navTo('dashboard')">
+        <span class="nav-icon" aria-hidden="true"><img class="nav-img" src="https://img.icons8.com/3d-fluency/48/home.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/home.png'" alt="Home"/></span>
+        <span class="nav-label">Home</span>
+      </a>
+      <a id="nav-transactions" class="nav-item" onclick="navTo('transactions')">
+        <span class="nav-icon" aria-hidden="true"><img class="nav-img" src="https://img.icons8.com/3d-fluency/48/wallet.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/wallet.png'" alt="Transações"/></span>
+        <span class="nav-label">Transações</span>
+      </a>
+      <a id="nav-reports" class="nav-item" onclick="navTo('reports')">
+        <span class="nav-icon" aria-hidden="true"><img class="nav-img" src="https://img.icons8.com/3d-fluency/48/combo-chart.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/combo-chart.png'" alt="Relatórios"/></span>
+        <span class="nav-label">Relatórios</span>
+      </a>
+    <!-- Extra/settings nav removed per user request -->
+    </nav>
+    <div class="saldo">Saldo Atual<br><span class="saldo-val">R$ <span id="saldo">0,00</span></span></div>
+  </header>
+
+  <main>
+    <div id="section-dashboard" class="container section">
+    <section class="header-row">
+      <div class="title-wrap">
+        <h1>Home</h1>
+        <p class="subtitle">Visão geral das suas finanças pessoais</p>
+        <div class="controls-center">
+          <div class="btn-group">
+            <button id="add-income" class="btn primary" onclick="openModal('income')">
+              <span class="btn-plus">+</span>
+            </button>
+            <span class="btn-label">Renda</span>
+          </div>
+          <div class="btn-group">
+            <button id="add-expense" class="btn" onclick="openModal('expense')">
+              <span class="btn-plus">+</span>
+            </button>
+            <span class="btn-label">Gastos</span>
+          </div>
+        </div>
+        
+      </div>
+    </section>
+
+    <section class="cards">
+      <div class="card credit-card credit-bg">
+        <div class="credit-overlay">
+            <!-- stat boxes removed per user request; card shows only background and chip -->
+            <!-- Renda Total (overlay text only, no background) -->
+            <div class="stat-box small top-left" aria-hidden="false">
+              <div class="stat-title">Renda Total</div>
+              <div class="stat-amount" id="credit-renda">R$ 0,00</div>
+            </div>
+
+            <!-- Gastos Totais (top-right) - same typography as Renda Total -->
+            <div class="stat-box medium top-right" aria-hidden="false">
+              <div class="stat-title">Gastos Totais</div>
+              <div class="stat-amount danger" id="credit-gastos">R$ 0,00</div>
+              <div class="stat-sub" id="credit-tx-count">0 transações</div>
+            </div>
+
+            <!-- Saldo Atual (moved below Renda Total) -->
+            <div class="stat-box small mid-left" aria-hidden="false">
+              <div class="stat-title">Saldo Atual</div>
+              <div class="stat-amount" id="credit-saldo">R$ 0,00</div>
+            </div>
+
+            <!-- Taxa de Economia (bottom-right) -->
+            <div class="credit-taxa">
+              <div class="stat-title">Taxa de Economia</div>
+              <div id="credit-taxa" class="stat-amount">0.0%</div>
+            </div>
+
+            <!-- chip image like in the mock -->
+            <img class="card-chip" src="cartao.png" alt="chip" onerror="this.onerror=null;this.src='https://img.icons8.com/color/80/smart-card-chip.png'" />
+
+            <!-- Gastos do Mês removed per user request -->
+
+            <!-- card meta removed per user request -->
+            <!-- optional PNG below the card stats (replace src with your image) -->
+            <img id="card-extra-png" class="card-extra-png" src="img/card-extra.png" alt="extra graphic" onerror="this.onerror=null;this.style.display='none'" />
+            <!-- compact transactions removed per request -->
+          </div>
+      </div>
+      <div class="card upcoming-card">
+        <div class="card-title">Vencimentos Próximos</div>
+        <div class="card-body">
+          <div id="upcoming-notices">Sem vencimentos próximos</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="month-summary">
+      <div class="box tips">
+        <h3>Desempenho do Mês</h3>
+        <div class="star-meter" id="month-star-meter" aria-hidden="false">
+          <!-- stars will be filled by JS -->
+          <span class="star" data-index="1">★</span>
+          <span class="star" data-index="2">★</span>
+          <span class="star" data-index="3">★</span>
+          <span class="star" data-index="4">★</span>
+          <span class="star" data-index="5">★</span>
+          <span class="star-pct" id="month-star-pct">0%</span>
+        </div>
+        <div class="tip small muted" id="month-star-msg"></div>
+      </div>
+    </section>
+
+    <section class="recent">
+      <h3 class="centered-heading">Transações Recentes</h3>
+      <div class="recent-box" id="recent-box">
+        <div class="empty">Nenhuma transação encontrada<br><small>Adicione sua primeira renda ou gasto para começar</small></div>
+      </div>
+    </section>
+    </div>
+
+    <div id="section-transactions" class="container section hidden">
+      <section class="header-row">
+        <h1>Transações</h1>
+        <p class="subtitle">Lista completa das suas transações</p>
+      </section>
+      <section class="recent">
+        <h3>Todas as Transações</h3>
+        <div class="recent-box" id="all-transactions-box">
+          <div class="empty">Nenhuma transação registrada</div>
+        </div>
+      </section>
+    </div>
+
+    <div id="section-reports" class="container section hidden">
+      <section class="header-row">
+        <h1>Relatórios</h1>
+        <p class="subtitle">Gráficos e resumos</p>
+      </section>
+      <section class="box">
+        <h3>Renda vs Gastos (Total)</h3>
+  <div class="report-controls">
+          <label>De: <input type="date" id="report-start"></label>
+          <label>Até: <input type="date" id="report-end"></label>
+          <button class="btn" id="report-filter">Filtrar</button>
+          <button class="btn" id="report-clear">Limpar</button>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart-income-expense" width="240" height="240"></canvas>
+        </div>
+  <div id="report-legend" class="report-legend"></div>
+      </section>
+      <section class="box">
+        <h3>Gastos por Categoria</h3>
+        <div class="chart-wrap">
+          <canvas id="chart-by-category" width="340" height="220"></canvas>
+        </div>
+        <div id="report-legend-cats" class="report-legend"></div>
+      </section>
+    </div>
+
+    <!-- Settings section removed per user request -->
+  </main>
+
+  <!-- modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Adicionar</h3>
+        <button class="modal-close" aria-label="Fechar" onclick="closeModal()">✕</button>
+      </div>
+      <form id="tx-form" onsubmit="addTx(event)">
+        <div class="form-row">
+          <label>Tipo
+            <select id="tx-type">
+              <option value="income">Renda</option>
+              <option value="expense">Gasto</option>
+            </select>
+          </label>
+        </div>
+        <input type="hidden" id="tx-id" />
+        <div class="form-row">
+          <label>Descrição
+            <input id="tx-desc" required placeholder="Ex: Salário, Mercado, Uber">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Valor
+            <input id="tx-value" type="number" step="0.01" required placeholder="0.00">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Parcelas (total)
+            <input id="tx-installments-total" type="number" min="1" placeholder="1">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Vencimento
+            <input id="tx-due-date" type="date" placeholder="">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Parcelas pagas
+            <input id="tx-installments-paid" type="number" min="0" placeholder="0">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Valor da parcela
+            <input id="tx-per-installment" type="number" step="0.01" placeholder="0.00">
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn primary">Salvar</button>
+          <button type="button" id="cancel" class="btn" onclick="closeModal()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const KEY = 'simple_dashboard_tx';
+      function $(s){return document.querySelector(s)}
+      const recentBox = $('#recent-box');
+      const saldoEl = $('#saldo');
+      const cardSaldo = $('#card-saldo');
+      const cardRenda = $('#card-renda');
+      const cardGastos = $('#card-gastos');
+      const cardTaxa = $('#card-taxa');
+      const monthGastos = $('#month-gastos');
+      const monthTx = $('#month-transacoes');
+      const modal = document.getElementById('modal');
+      const modalTitle = document.getElementById('modal-title');
+  const txType = document.getElementById('tx-type');
+  const txDesc = document.getElementById('tx-desc');
+  const txValue = document.getElementById('tx-value');
+  const txInstallmentsTotal = document.getElementById('tx-installments-total');
+  const txInstallmentsPaid = document.getElementById('tx-installments-paid');
+  const txPerInstallment = document.getElementById('tx-per-installment');
+  const txDueDate = document.getElementById('tx-due-date');
+  const txId = document.getElementById('tx-id');
+
+      let txs = [];
+
+      function categorize(desc, type){
+        const s = (desc||'').toLowerCase();
+        if(type === 'income'){
+          if(/sal[aá]r/i.test(s) || s.includes('salario') || s.includes('salário')) return 'Salário';
+          if(s.includes('freel') || s.includes('freela') || s.includes('projeto')) return 'Freelance';
+          return 'Outros';
+        }
+          if(s.match(/cart(ã|a)o|cartao|fatura|faturas|nubank|itau|bradesco|santander|caixa|banco|visa|mastercard|elo|amex/)) return 'Cartão';
+        if(s.match(/supermercad|mercad|mercearia|padaria/)) return 'Alimentação';
+        if(s.match(/restaurante|lanchonete|bar|delivery|pizza|burger/)) return 'Alimentação';
+  if(s.match(/uber|taxi|ônibus|onibus|metr[oó]|transporte|combust(í|i)vel|gasolina|carro|moto|motocicleta|bicicleta|financi/)) return 'Transporte';
+  if(s.match(/aluguel|condom[inio]/)) return 'Moradia';
+  // utilities and household expenses -> Casa
+  if(s.match(/luz|energia|agua|água|internet|iptu/)) return 'Casa';
+        if(s.match(/farmacia|rem[eé]dio|doutor|hospital|cl[ií]nica/)) return 'Saúde';
+        if(s.match(/cinema|netflix|spotify|ingresso|teatro|jogo|bar/)) return 'Lazer';
+        if(s.match(/curso|escola|facul|faculdade|livro/)) return 'Educação';
+        if(s.match(/roupa|vestu[rú]ario|zapatos|sapato/)) return 'Vestuário';
+        if(s.match(/compra|loja|shopping|amazon|mercado livre|mercadolivre/)) return 'Compras';
+        return 'Outros';
+      }
+
+      function categoryIcon(category){
+        const c = (category||'').toLowerCase();
+        // add onerror fallback to color icons if 3D assets are blocked / 404
+        if(/sal[aá]rio|salario|salário/.test(c)) return `<img class="cat-img" src="https://img.icons8.com/3d-fluency/48/money-bag.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/money-bag.png'" alt="Salário"/>`;
+          if(/casa|moradia/.test(c)) return `<img class="cat-img" src="https://img.icons8.com/3d-fluency/48/home.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/home.png'" alt="Casa"/>`;
+  if(/cart(ã|a)o|cartao|fatura|faturas|nubank|itau|bradesco|santander|caixa|banco|visa|mastercard|elo|amex/.test(c)) return `<img class="cat-img" src="https://img.icons8.com/?size=100&id=5s14FYPGstpM&format=png&color=000000" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23111\'><rect x=\'1\' y=\'5\' width=\'22\' height=\'14\' rx=\'2\'/><rect x=\'3\' y=\'8\' width=\'6\' height=\'2\' fill=\'%23fff\'/><rect x=\'3\' y=\'12\' width=\'8\' height=\'2\' fill=\'%23fff\'/></svg>'" alt="Cartão"/>`;
+          if(/uber|taxi|ônibus|onibus|metr[oó]|transporte|combust|gasolina|carro|moto|motocicleta|bicicleta|financi/.test(c)) return `<img class="cat-img" src="https://img.icons8.com/3d-fluency/48/car.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/car.png'" alt="Transporte"/>`;
+          if(/alimentação|mercad|restaurante|padaria|delivery|pizza|burger/.test(c)) return `<img class="cat-img" src="https://img.icons8.com/3d-fluency/48/food.png" alt="Alimentação"/>`;
+          if(/compras|compra|loja|shopping|amazon|mercado livre|mercadolivre/.test(c)) return `<img class="cat-img" src="https://img.icons8.com/3d-fluency/48/shopping-bag.png" alt="Compras"/>`;
+          if(/saúde|farmacia|rem[eé]dio|hospital|cl[ií]nica/.test(c)) return `<img class="cat-img" src="https://img.icons8.com/3d-fluency/48/health-book.png" alt="Saúde"/>`;
+          return `<img class="cat-img" src="https://img.icons8.com/3d-fluency/48/info.png" alt="Outros"/>`;
+      }
+
+      function load(){
+        try{ const r = localStorage.getItem(KEY); txs = r? JSON.parse(r): [] }catch(e){ txs = [] }
+          // reclassify and normalize transactions
+          txs = txs.map(function(orig){
+            var hadDue = Object.prototype.hasOwnProperty.call(orig, 'dueDate') && !!orig.dueDate;
+            var t = Object.assign({}, orig);
+            t.category = categorize(t.desc||'', t.type);
+            t.installmentsTotal = t.installmentsTotal||undefined;
+            t.installmentsPaid = t.installmentsPaid||0;
+            t.perInstallment = t.perInstallment||undefined;
+            t.dueDate = hadDue ? orig.dueDate : undefined;
+            t._dueDateExplicit = (orig._dueDateExplicit === true) || hadDue;
+            return t;
+          });
+          // Automatic migration: convert legacy `date` -> ISO dueDate and mark explicit so they show up
+          try{
+            var migrated = 0;
+            txs = txs.map(function(t){
+              if(!t._dueDateExplicit && t.date){
+                var p = (t.date||'').split('/');
+                if(p.length===3){
+                  t.dueDate = p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+                  t._dueDateExplicit = true;
+                  migrated++;
+                }
+              }
+              return t;
+            });
+            if(migrated>0) console.info('Migrated '+migrated+' transactions: converted legacy date -> dueDate and marked explicit');
+          }catch(e){console.error(e)}
+  try{ localStorage.setItem(KEY, JSON.stringify(txs)) }catch(e){}
+        render();
+      }
+      function save(){ try{ localStorage.setItem(KEY, JSON.stringify(txs)) }catch(e){} }
+      function formatMoney(v){ return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) }
+      function calc(){
+        const income = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.value,0);
+        const expense = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.value,0);
+        const saldo = income - expense;
+        const taxa = income===0?0: Math.round(((income-expense)/income)*1000)/10;
+        return {income, expense, saldo, taxa}
+      }
+
+      function render(){
+        const {income, expense, saldo, taxa} = calc();
+        if(saldoEl) saldoEl.textContent = formatMoney(saldo);
+  if(cardSaldo) cardSaldo.textContent = `R$ ${formatMoney(saldo)}`;
+  if(cardRenda) cardRenda.textContent = `R$ ${formatMoney(income)}`;
+  if(cardGastos) cardGastos.textContent = `R$ ${formatMoney(expense)}`;
+  if(cardTaxa) cardTaxa.textContent = `${taxa.toFixed(1)}%`;
+  // mirror values into the credit-card widget
+  const creditSaldo = document.getElementById('credit-saldo');
+  const creditRenda = document.getElementById('credit-renda');
+  const creditGastos = document.getElementById('credit-gastos');
+  const creditTaxa = document.getElementById('credit-taxa');
+  if(creditSaldo) creditSaldo.textContent = `R$ ${formatMoney(saldo)}`;
+  if(creditRenda) creditRenda.textContent = `R$ ${formatMoney(income)}`;
+  if(creditGastos) creditGastos.textContent = `R$ ${formatMoney(expense)}`;
+  if(creditTaxa) creditTaxa.textContent = `${taxa.toFixed(1)}%`;
+  // transactions count on the card (localized singular/plural)
+  const creditTxCountEl = document.getElementById('credit-tx-count');
+  if(creditTxCountEl) creditTxCountEl.innerHTML = `Transações <span class="tx-num">${txs.length}</span>`;
+  // populate the right-hand summary on the card
+  const ccMonthGastos = document.getElementById('cc-month-gastos');
+  const ccMonthTx = document.getElementById('cc-month-transacoes');
+  if(ccMonthGastos) ccMonthGastos.textContent = `R$ ${formatMoney(expense)}`;
+  if(ccMonthTx) ccMonthTx.textContent = `${txs.length}`;
+  if(monthGastos) monthGastos.textContent = `R$ ${formatMoney(expense)}`;
+  if(monthTx) monthTx.textContent = `${txs.length}`;
+
+  // update month star meter (5 stars) and keep it in sync with the card Taxa de Economia
+  try{
+    const starPctEl = document.getElementById('month-star-pct');
+    const starMsgEl = document.getElementById('month-star-msg');
+    const starEls = Array.from(document.querySelectorAll('#month-star-meter .star'));
+    if(starEls && starEls.length){
+      // Use the same 'taxa' value computed by calc() so the star meter
+      // matches the Taxa de Economia shown on the credit-card widget.
+      const pct = (typeof taxa === 'number' && isFinite(taxa)) ? Math.max(0, Math.min(100, taxa)) : 0;
+      if(starPctEl) starPctEl.textContent = `${pct.toFixed(1)}%`;
+      const filledStars = Math.round((pct / 100) * 5);
+      starEls.forEach((el, idx)=>{ if(idx < filledStars) el.classList.add('filled'); else el.classList.remove('filled'); });
+  // Keep the existing static helper text; do not overwrite it with the verbose label
+  // if(starMsgEl) starMsgEl.textContent = `Taxa de Economia (mês): ${pct.toFixed(1)}% da renda`;
+    }
+  }catch(e){console.error(e)}
+
+  /* compact card transactions removed per request - no DOM updates here */
+
+        recentBox.innerHTML = '';
+        if(txs.length===0){
+          recentBox.innerHTML = `<div class="empty">Nenhuma transação encontrada<br><small>Adicione sua primeira renda ou gasto para começar</small></div>`;
+          return;
+        }
+
+          txs.slice().reverse().forEach(t=>{
+            const div = document.createElement('div');
+            div.className = 'tx';
+            // build installment info and due label for compact card
+            let installmentInfo = '';
+            if(t.installmentsTotal && t.installmentsTotal>1){
+              const paid = t.installmentsPaid || 0;
+              const per = t.perInstallment || (t.value / t.installmentsTotal);
+              const left = Math.max(0, (t.installmentsTotal||0) - paid);
+              installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas — ${left} faltam — R$ ${formatMoney(per)}</div>`;
+            }
+            const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
+            div.innerHTML = `
+              <div>
+                <div class="cat-inline">${categoryIcon(t.category)} <strong class="cat-name">${t.category || '—'}</strong></div>
+                <strong>${t.desc}</strong>
+                <div class="meta">${t.date}${dueLabel? ' • Venc.: '+dueLabel : ''}</div>
+                ${installmentInfo}
+              </div>
+              <div style="text-align:right">
+                <div style="color:${t.type==='expense'? 'var(--danger)':'var(--accent)'}">R$ ${formatMoney(t.value)}</div>
+                <div class="tx-actions">
+                  <button class="btn" title="Editar" onclick="editTx('${t.id}')">✏️</button>
+                  <button class="btn" title="Remover" onclick="removeTx('${t.id}')">🗑️</button>
+                </div>
+              </div>
+            `;
+            recentBox.appendChild(div);
+          });
+        // keep the all-transactions view in sync
+        if(typeof renderAllTransactions === 'function') renderAllTransactions();
+        // update reports if visible
+        try{
+          const reportsEl = document.getElementById('section-reports');
+          if(reportsEl && !reportsEl.classList.contains('hidden') && typeof renderReports === 'function') renderReports();
+        }catch(e){}
+      }
+
+      function openModal(type){
+        modal.classList.remove('hidden');
+        modalTitle.textContent = type==='income'? 'Adicionar Renda':'Adicionar Gasto';
+        txType.value = type;
+        // if editing (tx-id present), don't clear fields so editTx can prefill them
+        const existingId = txId ? txId.value : '';
+        if(!existingId){
+          txDesc.value=''; txValue.value=''; txId.value='';
+          if(txInstallmentsTotal) txInstallmentsTotal.value = '';
+          if(txInstallmentsPaid) txInstallmentsPaid.value = '';
+          if(txPerInstallment) txPerInstallment.value = '';
+          if(txDueDate) txDueDate.value = '';
+        }
+      }
+      function closeModal(){ modal.classList.add('hidden'); if(txId) txId.value=''; }
+
+      function addTx(e){
+        e.preventDefault();
+        const t = txType.value;
+        const desc = txDesc.value.trim();
+        const value = Number(txValue.value);
+        const instTotal = txInstallmentsTotal ? Number(txInstallmentsTotal.value) || undefined : undefined;
+        const instPaid = txInstallmentsPaid ? Number(txInstallmentsPaid.value) || 0 : 0;
+        const perInst = txPerInstallment ? Number(txPerInstallment.value) || undefined : undefined;
+        const due = txDueDate && txDueDate.value ? txDueDate.value : undefined;
+        if(!desc || isNaN(value) || value<=0) return alert('Preencha descrição e valor válido');
+        const existing = txId.value;
+        if(existing){
+          const idx = txs.findIndex(x=>x.id===existing);
+          if(idx!==-1){
+            txs[idx].desc = desc; txs[idx].value = value; txs[idx].type = t;
+            txs[idx].installmentsTotal = instTotal; txs[idx].installmentsPaid = instPaid; txs[idx].perInstallment = perInst; 
+            txs[idx].dueDate = due;
+            txs[idx]._dueDateExplicit = !!due;
+          }
+        }else{
+            const newTx = { id: Math.random().toString(36).slice(2,9), type: t, desc, value, date: new Date().toLocaleDateString(), category: categorize(desc, t), installmentsTotal: instTotal, installmentsPaid: instPaid, perInstallment: perInst, dueDate: due };
+            // mark whether the user explicitly set a due date for filtering
+            newTx._dueDateExplicit = !!due;
+            txs.push(newTx);
+        }
+        save(); render(); closeModal();
+      }
+
+      function removeTx(id){ txs = txs.filter(t=>t.id!==id); save(); render(); }
+      function editTx(id){
+        const tx = txs.find(t=>t.id===id);
+        if(!tx) return;
+        txId.value = tx.id;
+        txType.value = tx.type;
+        txDesc.value = tx.desc;
+        txValue.value = String(tx.value);
+        if(txInstallmentsTotal) txInstallmentsTotal.value = tx.installmentsTotal ? String(tx.installmentsTotal) : '';
+        if(txInstallmentsPaid) txInstallmentsPaid.value = tx.installmentsPaid ? String(tx.installmentsPaid) : '';
+        if(txPerInstallment) txPerInstallment.value = tx.perInstallment ? String(tx.perInstallment) : '';
+        if(txDueDate) txDueDate.value = tx.dueDate ? tx.dueDate : '';
+        openModal(tx.type);
+      }
+
+      // expose globally for inline handlers
+      window.openModal = openModal;
+      window.closeModal = closeModal;
+      window.addTx = addTx;
+      window.removeTx = removeTx;
+      window.editTx = editTx;
+
+      function navTo(name){
+        const sections = ['dashboard','transactions','reports','settings'];
+        sections.forEach(s=>{
+          const el = document.getElementById('section-'+s);
+          const nav = document.getElementById('nav-'+s);
+          if(el) el.classList.add('hidden');
+          if(nav) nav.classList.remove('active');
+        });
+        const target = document.getElementById('section-'+name);
+        const navTarget = document.getElementById('nav-'+name);
+        if(target) target.classList.remove('hidden');
+        if(navTarget) navTarget.classList.add('active');
+        // when navigating to transactions, populate the full list
+        if(name==='transactions' && typeof renderAllTransactions === 'function') renderAllTransactions();
+        // when navigating to reports, render charts
+        if(name==='reports' && typeof renderReports === 'function') renderReports();
+      }
+      window.navTo = navTo;
+
+      function renderAllTransactions(){
+        const box = document.getElementById('all-transactions-box');
+        if(!box) return;
+        box.innerHTML = '';
+        if(txs.length===0){ box.innerHTML = '<div class="empty">Nenhuma transação registrada</div>'; return }
+        
+          txs.slice().reverse().forEach(t=>{
+            const row = document.createElement('div');
+            row.className = 'tx';
+            let installmentInfo = '';
+            if(t.installmentsTotal && t.installmentsTotal>1){
+              const paid = t.installmentsPaid || 0;
+              const per = t.perInstallment || (t.value / t.installmentsTotal);
+              const left = Math.max(0, (t.installmentsTotal||0) - paid);
+              installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas — ${left} faltam — R$ ${formatMoney(per)}</div>`;
+            }
+            const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
+            row.innerHTML = `
+              <div>
+                <div class="cat-inline">${categoryIcon(t.category)} <strong class="cat-name">${t.category || '—'}</strong></div>
+                <strong>${t.desc}</strong>
+                <div class="meta">${t.date}${dueLabel? ' • Venc.: '+dueLabel : ''}</div>
+                ${installmentInfo}
+              </div>
+              <div style="text-align:right">
+                <div style="color:${t.type==='expense'? 'var(--danger)':'var(--accent)'}">R$ ${formatMoney(t.value)}</div>
+                <div class="tx-actions">
+                  <button class="btn" title="Editar" onclick="editTx('${t.id}')">✏️</button>
+                  <button class="btn" title="Remover" onclick="removeTx('${t.id}')">🗑️</button>
+                </div>
+              </div>
+            `;
+            box.appendChild(row);
+          });
+      }
+
+      // helper: prefer dueDate (ISO) or fallback to tx.date (dd/mm/yyyy)
+      function getStartDate(t){
+        if(t.dueDate){ const p = (t.dueDate||'').split('-'); if(p.length===3) return new Date(Number(p[0]), Number(p[1])-1, Number(p[2])); }
+        const parts = (t.date||'').split('/'); if(parts.length===3) return new Date(Number(parts[2]), Number(parts[1])-1, Number(parts[0]));
+        return new Date();
+      }
+
+      function renderUpcoming(){
+        const el = document.getElementById('upcoming-notices');
+        if(!el) return;
+        const list = [];
+        // prefer network time with local fallback
+        async function getNetworkNow(){
+          try{ const r = await fetch('https://worldtimeapi.org/api/ip'); if(r.ok){ const j = await r.json(); if(j && j.datetime) return new Date(j.datetime); } }catch(e){}
+          return new Date();
+        }
+        function renderWithToday(today){
+          const totalTxs = txs.length;
+          const expenseCount = txs.filter(x=>x.type==='expense').length;
+          const explicitCount = txs.filter(x=>x._dueDateExplicit).length;
+          let upcomingFound = 0;
+          const localList = [];
+          txs.forEach(function(t){
+            // Include any transaction that has an explicit due date so incomes
+            // or other entries with a dueDate will appear in upcoming notices.
+            if(!t._dueDateExplicit && !t.dueDate) return;
+            const startDt = getStartDate(t);
+            const totalInst = t.installmentsTotal && t.installmentsTotal>1 ? t.installmentsTotal : 1;
+            const per = t.perInstallment || (t.value / totalInst);
+            const paid = t.installmentsPaid || 0;
+                for(var k=paid;k<totalInst;k++){
+                  const instDt = new Date(startDt.getFullYear(), startDt.getMonth()+k, startDt.getDate());
+                  const diff = Math.ceil((instDt.getTime()-today.getTime())/(1000*60*60*24));
+                  // only include installments between today and the next 31 days
+                  if(diff >= 0 && diff <= 31){
+                    localList.push({ id: t.id, desc: t.desc, due: instDt, days: diff, amount: per });
+                    upcomingFound++;
+                  }
+                }
+          });
+          localList.sort((a,b)=>a.due.getTime()-b.due.getTime());
+          if(localList.length===0){
+            el.innerHTML = `<div class="notice">Sem vencimentos próximos</div>`; return;
+          }
+          el.innerHTML = localList.map(function(it){
+            const d = it.due;
+            const label = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+            const daysText = it.days>0? `${it.days} dias` : (it.days===0? 'hoje' : `${Math.abs(it.days)} dias atras`);
+            const urgent = it.days<=3 ? 'urgent' : '';
+            return `<div class="notice ${urgent}"><strong>${it.desc}</strong> — R$ ${formatMoney(it.amount)} — vence ${label} (${daysText})</div>`;
+          }).join('');
+        }
+        // immediate render with client clock
+        renderWithToday(new Date());
+        // re-render with network time if differs
+        (async function(){ try{ const now = await getNetworkNow(); if(now.toDateString() !== (new Date()).toDateString()) renderWithToday(now); }catch(e){} })();
+        // No fallback: only show installments in the 0..31 day window
+      }
+
+      // debug helper exposed to window
+      async function inspectTxs(){
+        try{
+          const raw = localStorage.getItem(KEY);
+          const list = raw? JSON.parse(raw) : [];
+          let today = new Date();
+          try{ const r = await fetch('https://worldtimeapi.org/api/ip'); if(r.ok){ const j = await r.json(); if(j && j.datetime) today = new Date(j.datetime); } }catch(e){}
+          console.group('inspectTxs - now', today.toString());
+          if(!list.length){ console.log('no transactions'); console.groupEnd(); return }
+          list.forEach((t,idx)=>{
+            const startDt = (function(){ if(t.dueDate){ const p=(t.dueDate||'').split('-'); if(p.length===3) return new Date(Number(p[0]), Number(p[1])-1, Number(p[2])); } const pd=(t.date||'').split('/'); if(pd.length===3) return new Date(Number(pd[2]), Number(pd[1])-1, Number(pd[0])); return null; })();
+            const totalInst = t.installmentsTotal && t.installmentsTotal>1 ? t.installmentsTotal : 1;
+            const paid = t.installmentsPaid || 0;
+            const insts = [];
+            let includeAny = false;
+            for(let k=paid;k<totalInst;k++){
+              if(!startDt) break;
+              const instDt = new Date(startDt.getFullYear(), startDt.getMonth()+k, startDt.getDate());
+              const diff = Math.ceil((instDt.getTime()-today.getTime())/(1000*60*60*24));
+              const include = diff >= -30; if(include) includeAny = true;
+              insts.push({ installment:k+1, due:instDt.toLocaleDateString(), days:diff, include });
+            }
+            console.group(`tx[${idx}] ${t.desc} (${t.type}) id=${t.id}`);
+            console.log('raw', t);
+            console.log('startDateParsed', startDt ? startDt.toString() : '(none)');
+            console.log('unpaidInstallments', insts);
+            console.log('will appear in upcoming?', includeAny);
+            console.groupEnd();
+          });
+          console.groupEnd();
+        }catch(e){ console.error(e) }
+      }
+      window.inspectTxs = inspectTxs;
+
+      // Render a lightweight inspection summary into the page so users
+      // who won't open DevTools can still see why the upcoming card is
+      // empty or which installments are detected.
+      function showInspectOnPage(){
+        try{
+          const raw = localStorage.getItem(KEY);
+          const list = raw? JSON.parse(raw) : [];
+          const outEl = document.getElementById('upcoming-inspect');
+          if(!outEl) return;
+          if(!list.length){ outEl.innerHTML = '<div class="muted">Nenhuma transação no armazenamento local</div>'; return }
+          const now = new Date();
+          let html = '<div style="font-weight:600;margin-bottom:6px">Diagnóstico (visível)</div>';
+          list.forEach(function(t,idx){
+            const startDt = (function(){ if(t.dueDate){ const p=(t.dueDate||'').split('-'); if(p.length===3) return new Date(Number(p[0]), Number(p[1])-1, Number(p[2])); } const pd=(t.date||'').split('/'); if(pd.length===3) return new Date(Number(pd[2]), Number(pd[1])-1, Number(pd[0])); return null; })();
+            const totalInst = t.installmentsTotal && t.installmentsTotal>1 ? t.installmentsTotal : 1;
+            const paid = t.installmentsPaid || 0;
+            html += `<div style="margin-bottom:6px"><strong>${t.desc||'(sem descrição)'}</strong> — ${t.type || '—'}<div style="margin-left:8px">`;
+            if(!startDt) html += '<div class="muted">sem data/vencimento</div>';
+            else {
+              // show only the next unpaid installment (no "Parcela X/Y" text)
+              const k = paid;
+              if(k < totalInst){
+                const instDt = new Date(startDt.getFullYear(), startDt.getMonth()+k, startDt.getDate());
+                const diff = Math.ceil((instDt.getTime() - now.getTime())/(1000*60*60*24));
+                const daysText = diff>0? `${diff} dias` : (diff===0? 'hoje' : `${Math.abs(diff)} dias atras`);
+                html += `<div>vence ${instDt.toLocaleDateString()} — ${daysText}</div>`;
+              } else {
+                html += '<div class="muted">todas parcelas pagas</div>';
+              }
+            }
+            html += '</div></div>';
+          });
+          outEl.innerHTML = html;
+        }catch(e){ console.error(e) }
+      }
+
+      function renderReports(){
+        const canvas = document.getElementById('chart-income-expense');
+        if(!canvas) return;
+          if(typeof Chart === 'undefined') return; // chart lib not loaded yet
+        // optionally apply date filter (report-start, report-end in yyyy-mm-dd)
+        const startEl = document.getElementById('report-start');
+        const endEl = document.getElementById('report-end');
+        const startDate = startEl && startEl.value ? new Date(startEl.value) : null;
+        const endDate = endEl && endEl.value ? new Date(endEl.value) : null;
+        // aggregate totals applying date filter
+        let totalIncome = 0, totalExpense = 0;
+        txs.forEach(t=>{
+          // parse dd/mm/yyyy
+          const parts = (t.date||'').split('/');
+          let dt = new Date();
+          if(parts.length===3){ dt = new Date(Number(parts[2]), Number(parts[1])-1, Number(parts[0])); }
+          if(startDate && dt < startDate) return;
+          if(endDate && dt > endDate) return;
+          if(t.type==='income') totalIncome += t.value; else totalExpense += t.value;
+        });
+        if(!window._incomeExpenseChart){
+          const ctx = canvas.getContext('2d');
+          window._incomeExpenseChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Renda','Gastos'], datasets: [{ data: [totalIncome, totalExpense], backgroundColor: ['rgba(16,185,129,0.8)','rgba(239,68,68,0.8)'] }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' } } } });
+        } else {
+          const ch = window._incomeExpenseChart;
+          ch.data.datasets[0].data = [totalIncome, totalExpense];
+          ch.update();
+        }
+        // update legend text
+        const legend = document.getElementById('report-legend');
+        if(legend){
+          const total = totalIncome + totalExpense;
+          const pi = total===0?0: Math.round((totalIncome/total)*1000)/10;
+          const pe = total===0?0: Math.round((totalExpense/total)*1000)/10;
+          legend.innerHTML = `<strong>Renda:</strong> R$ ${formatMoney(totalIncome)} (${pi}%) &nbsp; • &nbsp; <strong>Gastos:</strong> R$ ${formatMoney(totalExpense)} (${pe}%)`;
+        }
+        // --- monthly consumption per category (line chart) ---
+        try{
+          const catCanvas = document.getElementById('chart-by-category');
+          if(catCanvas){
+            // aggregate expenses per category by month (YYYY-MM)
+            const byMonthCat = {};
+            const monthSet = new Set();
+            txs.forEach(t=>{
+              const parts = (t.date||'').split('/');
+              let dt = new Date();
+              if(parts.length===3){ dt = new Date(Number(parts[2]), Number(parts[1])-1, Number(parts[0])); }
+              if(startDate && dt < startDate) return;
+              if(endDate && dt > endDate) return;
+              if(t.type!=='expense') return;
+              const key = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+              monthSet.add(key);
+              const cat = t.category || 'Outros';
+              byMonthCat[key] = byMonthCat[key] || {};
+              byMonthCat[key][cat] = (byMonthCat[key][cat]||0) + t.value;
+            });
+            const months = Array.from(monthSet).sort();
+            const labels = months.map(m => { const [y,mo] = m.split('-'); return `${mo}/${y}`; });
+            // compute totals per category to pick top categories
+            const totalsPerCat = {};
+            months.forEach(m=>{
+              const cats = byMonthCat[m]||{};
+              Object.keys(cats).forEach(c=> totalsPerCat[c] = (totalsPerCat[c]||0) + cats[c]);
+            });
+            const categories = Object.keys(totalsPerCat).sort((a,b)=>totalsPerCat[b]-totalsPerCat[a]).slice(0,6);
+            const palette = ['#ef4444','#f97316','#16a34a','#0ea5e9','#7c3aed','#eab308','#06b6d4','#f43f5e'];
+            const datasets = categories.map((cat,i)=>({ label:cat, data: months.map(m => (byMonthCat[m] && byMonthCat[m][cat])? byMonthCat[m][cat] : 0), borderColor: palette[i%palette.length], backgroundColor: palette[i%palette.length], fill:false, tension:0.25 }));
+            if(!window._categoryChart){
+              const ctx2 = catCanvas.getContext('2d');
+              window._categoryChart = new Chart(ctx2, { type:'line', data:{ labels, datasets }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' } }, scales:{ y:{ beginAtZero:true } } } });
+            } else {
+              const ch2 = window._categoryChart;
+              ch2.config.type = 'line';
+              ch2.data.labels = labels;
+              ch2.data.datasets = datasets;
+              ch2.update();
+            }
+            const legendCats = document.getElementById('report-legend-cats');
+            if(legendCats){
+              let html = '';
+              categories.forEach((c,i)=> html += `<div style="display:inline-block;margin:6px 8px;vertical-align:middle"><span class="legend-dot" style="background:${palette[i%palette.length]}"></span>${c}: R$ ${formatMoney(totalsPerCat[c]||0)}</div>`);
+              legendCats.innerHTML = html;
+            }
+          }
+        }catch(e){ console.error(e) }
+      }
+
+  load();
+  // Ensure upcoming notices and the on-page diagnostic are shown without
+  // requiring the user to open DevTools. Also update the global render to
+  // include upcoming and diagnostics so manual calls reflect both areas.
+  try{ renderUpcoming(); }catch(e){}
+  window.render = function(){ render(); try{ renderUpcoming(); }catch(e){} };
+      // hook report filter buttons
+      try{
+        const btnFilter = document.getElementById('report-filter');
+        const btnClear = document.getElementById('report-clear');
+        if(btnFilter) btnFilter.addEventListener('click', (e)=>{ e.preventDefault(); renderReports(); navTo('reports'); });
+        if(btnClear) btnClear.addEventListener('click', (e)=>{ e.preventDefault(); const s=document.getElementById('report-start'); const t=document.getElementById('report-end'); if(s) s.value=''; if(t) t.value=''; renderReports(); });
+      }catch(e){}
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>

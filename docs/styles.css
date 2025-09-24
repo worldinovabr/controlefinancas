@@ -1,0 +1,677 @@
+.btn-plus {
+  font-size: 2.2rem;
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #f6f9fc;
+  box-shadow: 12px 12px 24px #e9eef5, -12px -12px 24px #fff;
+  border: none;
+  margin: 0 auto;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.btn-plus:active {
+  box-shadow: 6px 6px 12px #e9eef5, -6px -6px 12px #fff;
+  background: #eef4fb;
+}
+
+@media (max-width: 900px) {
+  .btn-plus {
+    width: 64px;
+    height: 64px;
+    font-size: 1.7rem;
+  }
+}
+@media (max-width: 600px) {
+  .btn-plus {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+}
+@media (max-width: 400px) {
+  .btn-plus {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+}
+/* Botão circular neumórfico igual à imagem */
+.btn-plus {
+  font-size: 2.2rem;
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #f6f9fc;
+  box-shadow: 12px 12px 24px #e9eef5, -12px -12px 24px #fff;
+  border: none;
+  margin: 0 auto;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.btn-plus:active {
+  box-shadow: 6px 6px 12px #e9eef5, -6px -6px 12px #fff;
+  background: #eef4fb;
+}
+/* Estilo para ícone + dentro do botão e texto fora */
+.btn-plus {
+  font-size: 2rem;
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: transparent;
+  margin: 0 auto;
+}
+.btn-label {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #222;
+  margin-left: 10px;
+  margin-right: 24px;
+  display: inline-block;
+  vertical-align: middle;
+}
+:root{
+  /* Neumorphic palette */
+  --bg:#e9eef5; /* soft background */
+  --card:#f6f9fc; /* lifted card */
+  --nav-item-w:96px;
+  --muted:#6b7280;
+  --accent:#16a34a; /* green */
+  --danger:#ef4444;
+  --shadow-light: rgba(255,255,255,0.9);
+  --shadow-dark: rgba(163,177,198,0.45);
+}
+/* utility to hide sections controlled by JS */
+.hidden{display:none !important}
+*{box-sizing:border-box}
+body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);margin:0;color:#111}
+.topbar{display:flex;align-items:center;gap:16px;padding:18px 26px;background:var(--card);border-radius:14px;margin:12px 20px;box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light)}
+.topbar{padding:24px 29px;min-height:90px}
+.topbar .brand{font-weight:700}
+.topbar .nav{display:flex;gap:12px;flex:1}
+.nav-item{padding:8px 14px;border-radius:14px;color:var(--muted);text-decoration:none;font-size:15px}
+.nav-item{padding:8px 14px;border-radius:12px;color:var(--muted);text-decoration:none;font-size:15px;background:linear-gradient(180deg, var(--card), #eef6ff);box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light)}
+.nav-item.active{background:linear-gradient(180deg,#0b1220,#0f172a);color:#fff;padding:8px 16px;border-radius:12px;box-shadow: inset 4px 4px 8px rgba(0,0,0,0.15)}
+.topbar .saldo{font-size:12px;text-align:right}
+.topbar .saldo-val{color:var(--accent);font-weight:700}
+.container{max-width:1100px;margin:20px auto;padding:0 16px}
+.header-row{display:flex;align-items:flex-start;gap:20px}
+.header-row{display:flex;align-items:center;gap:8px;position:relative}
+.header-row h1{margin:0;text-align:center}
+.header-row .subtitle{margin:6px 0;color:var(--muted);text-align:center}
+.title-wrap{flex:1 1 60%;min-width:220px;display:flex;flex-direction:column;align-items:center}
+.controls-center{flex:0 1 40%;display:flex;gap:20px;align-items:center;justify-content:center;flex-wrap:nowrap;margin-top:12px}
+.controls-center .btn{flex:0 0 auto;min-width:120px;padding:8px 10px}
+.btn{border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg,var(--card),#eef4fb);padding:8px 12px;border-radius:12px;cursor:pointer;box-shadow:4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light)}
+.btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+.card{background:var(--card);padding:18px;border-radius:12px;border:1px solid #eee}
+.card.highlight{box-shadow:0 6px 18px rgba(16,185,129,0.06)}
+.card-title{font-size:13px;color:var(--muted)}
+.card-value{font-size:20px;font-weight:700;margin-top:8px}
+.card-value.danger{color:var(--danger)}
+.month-summary{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-top:20px}
+.box{background:var(--card);padding:18px;border-radius:14px;border:none;box-shadow: 8px 8px 18px var(--shadow-dark), -8px -8px 18px var(--shadow-light)}
+.box .row{display:flex;gap:24px;align-items:center}
+.big{font-size:20px;font-weight:700}
+.big.danger{color:var(--danger)}
+.tips .tip{background:#eef2ff;padding:12px;border-radius:8px}
+
+/* Center the box headings inside the month-summary / tips box */
+.month-summary .box h3,
+.tips h3 {
+  text-align: center;
+  margin-top: 0;
+}
+
+/* utility class to center section headings like 'Transações Recentes' */
+.centered-heading{ text-align:center; margin:0 auto 12px; display:block; width:100%; }
+
+/* star meter for monthly performance */
+.star-meter{ display:flex; align-items:center; justify-content:center; gap:8px; font-size:36px; }
+.star-meter .star{ color: rgba(0,0,0,0.18); text-shadow: none; cursor:default; font-size:1em; }
+.star-meter .star.filled{ color: #FFD166; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.05)); }
+.star-meter .star-pct{ margin-left:8px; font-weight:700; color: #0f172a; font-size:13px }
+.star-meter .star:hover{ transform: none }
+
+@media (max-width:480px){
+  .star-meter{ font-size:32px; gap:10px }
+  .star-meter .star-pct{ font-size:12px }
+}
+.recent{margin-top:20px}
+.recent-box{background:var(--card);padding:18px;border-radius:12px;border:1px solid #eee;min-height:140px}
+.recent-box .tx{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px dashed #f1f1f1}
+.recent-box .tx:last-child{border-bottom:none}
+.recent-box .tx .meta{font-size:12px;color:#666}
+.tx-actions{display:flex;gap:8px}
+.tx-actions .btn{padding:6px 8px;border-radius:6px}
+.empty{color:var(--muted);text-align:center}
+.cat{display:inline-flex;align-items:center;gap:8px;color:var(--muted)}
+.cat-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px}
+.cat-svg{width:18px;height:18px;display:block}
+.cat-img{width:20px;height:20px;display:block;object-fit:contain;border-radius:4px}
+.cat-inline{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cat-name{font-size:13px;color:var(--muted);font-weight:600;margin-right:6px}
+.modal{position:fixed;inset:0;background:rgba(3,7,18,0.5);display:flex;align-items:center;justify-content:center}
+.modal.hidden{display:none}
+.modal-content{background:var(--card);padding:18px;border-radius:14px;width:420px;max-width:92%;box-shadow: 12px 18px 32px rgba(16,24,40,0.12);transform:translateY(-6px);animation:modal-in .16s ease-out;overflow:hidden}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 12px 2px;border-bottom:1px solid rgba(0,0,0,0.04)}
+.modal-header h3{margin:0;font-size:18px}
+.modal-close{background:transparent;border:none;font-size:18px;line-height:1;padding:6px 8px;border-radius:8px;cursor:pointer;color:var(--muted)}
+.modal-close:hover{background:rgba(0,0,0,0.04)}
+.form-row{margin-top:10px}
+.form-row label{display:block;font-size:13px;color:var(--muted)}
+.form-row input,.form-row select{width:100%;padding:10px 12px;border-radius:10px;border:none;background:linear-gradient(180deg,var(--card),#f4f9ff);box-shadow: inset 4px 4px 8px var(--shadow-light), inset -4px -4px 8px var(--shadow-dark);margin-top:6px}
+.form-row input:focus,.form-row select:focus{outline:none;box-shadow: inset 2px 2px 6px var(--shadow-light), inset -2px -2px 6px var(--shadow-dark)}
+.modal-actions{display:flex;gap:10px;margin-top:16px;justify-content:flex-end}
+.btn{padding:10px 14px;border-radius:14px}
+.btn.primary{padding:10px 18px}
+/* Group for each circular button + label */
+.btn-group{display:flex;flex-direction:column;align-items:center;gap:8px}
+
+/* Keep header-row relative but do not absolutely position the action buttons here */
+.header-row{position:relative}
+/* Override any previous absolute positioning for these action buttons so they stay in the controls area */
+#add-expense, #add-income{position:static !important;right:auto !important;top:auto !important;margin-left:0 !important;transform:none !important}
+@keyframes modal-in{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.month-summary{grid-template-columns:1fr}}
+
+@media(max-width:600px){
+  .recent-box{padding:12px;gap:8px}
+  .recent-box .tx{min-width:100%;max-width:100%;flex-direction:row;align-items:center;padding:10px}
+  .recent-box .tx-row{flex:1}
+  /* keep buttons side-by-side on medium screens but equal width */
+  .controls-left,.controls-right{flex:0 0 auto}
+  .controls-left .btn,.controls-right .btn{min-width:140px}
+}
+
+/* Mobile responsiveness improvements */
+@media (max-width: 480px) {
+  .topbar{flex-direction:column;align-items:flex-start;padding:12px}
+  .topbar .nav{width:100%;display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .nav-item{font-size:14px;padding:8px 10px}
+  .topbar .saldo{align-self:flex-end;font-size:12px}
+  .container{padding:10px}
+  .cards{grid-template-columns:1fr;gap:10px}
+  .card{padding:14px}
+  .month-summary{grid-template-columns:1fr;gap:10px}
+  .box{padding:12px}
+  .recent-box{min-height:80px;padding:12px}
+  .chart-wrap{width:100% !important;height:200px;padding:8px}
+  #chart-by-category{width:100% !important;height:200px !important}
+  #chart-income-expense{width:100% !important;height:200px !important}
+  .modal-content{width:92%}
+  .cat-name{font-size:12px}
+  .card-value{font-size:18px}
+  .big{font-size:18px}
+  .report-controls{flex-direction:column;align-items:flex-start;gap:6px}
+  .report-controls label{width:100%}
+  .report-controls input[type="date"]{width:100%}
+  .report-legend, #report-legend-cats{font-size:13px}
+}
+
+/* Slightly smaller layout for small tablets */
+@media (min-width:481px) and (max-width:900px){
+  .container{padding:12px}
+  .cards{grid-template-columns:repeat(2,1fr);gap:12px}
+  .chart-wrap{width:100%;height:240px}
+  #chart-by-category{width:100% !important;height:240px !important}
+}
+
+/* finer mobile breakpoints */
+@media (max-width:360px){
+  body{font-size:13px}
+  .nav-item{padding:4px 8px;font-size:12px;margin-right:6px}
+  .chart-wrap{height:180px}
+  #chart-by-category{height:180px !important}
+}
+
+@media (max-width:320px){
+  body{font-size:12px}
+  .chart-wrap{height:160px}
+  #chart-by-category{height:160px !important}
+  .modal-content{width:96%}
+}
+
+/* targeted fixes for 400px wide mobile devices (e.g. 400x850) */
+@media (max-width:420px){
+  html,body{overflow-x:hidden}
+  .container{max-width:400px;padding:8px;margin:0 auto}
+  .topbar{padding:10px;border-radius:0}
+  .brand{font-size:18px}
+  .topbar .saldo{display:block;text-align:right;font-size:12px}
+  .header-row{flex-direction:column;align-items:flex-start;padding:6px}
+  .header-row h1{font-size:22px}
+  .header-row .subtitle{font-size:13px}
+  .controls{width:100%;display:flex;gap:8px;flex-wrap:wrap}
+  .btn{padding:8px 10px;font-size:14px}
+  .nav{gap:6px}
+  .nav-item{flex:0 0 auto;min-width:56px;padding:4px 8px;font-size:12px;margin-right:6px}
+  .chart-wrap{padding:6px;height:180px}
+  #chart-by-category{width:100% !important;height:180px !important}
+  .recent-box{padding:10px}
+  .card{padding:12px}
+  .card-value{font-size:16px}
+  .report-controls{gap:6px}
+  .report-controls input[type="date"]{padding:6px}
+}
+
+/* header/nav compact fixes: make nav horizontally scrollable and pills smaller on tiny screens */
+@media (max-width:420px){
+  .topbar{box-shadow: 4px 6px 10px rgba(163,177,198,0.25), -4px -4px 10px rgba(255,255,255,0.85)}
+  .topbar{display:flex;flex-direction:column;align-items:flex-start}
+  .topbar .nav{display:flex;overflow-x:auto;white-space:nowrap;width:100%;padding:6px 0;margin:6px 0}
+  .nav-item{display:inline-block;flex:0 0 auto;margin-right:6px;padding:5px 8px;border-radius:12px;font-size:12px;box-shadow:2px 2px 6px rgba(163,177,198,0.22), -2px -2px 6px rgba(255,255,255,0.9);width:var(--nav-item-w);max-width:100%;text-align:center;box-sizing:border-box}
+  .nav-item.active{padding:5px 10px}
+  /* keep controls on a single compact row */
+  .header-row .controls{display:flex;flex-wrap:nowrap;gap:8px;margin-top:8px}
+  .controls .btn{flex:0 0 auto}
+  /* make balance align to the right but on its own row */
+  .topbar .saldo{align-self:flex-end;margin-top:-6px;font-size:12px}
+}
+
+/* ultra-targeted: exact-400px width tweaks to match screenshot proportions */
+@media (max-width:400px){
+  html,body{overflow-x:hidden}
+  .container{max-width:400px;padding:6px;margin:0 auto}
+  .topbar{padding:8px 10px}
+  .brand{font-size:16px}
+  .topbar .nav{padding:4px 0;margin:4px 0;gap:4px}
+  .nav-item{font-size:11px;padding:4px 6px;min-width:48px;margin-right:6px}
+  .nav-item.active{padding:4px 8px}
+  .topbar .saldo{font-size:11px;margin-top:-4px}
+  /* keep the main header buttons side-by-side on narrow phones like 380px width */
+  .controls-center{flex-wrap:nowrap;justify-content:center}
+  .controls-center .btn{min-width:calc(50% - 14px);max-width:calc(50% - 14px);padding:6px 8px}
+}
+
+/* legend dot class */
+.legend-dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;box-shadow:0 1px 2px rgba(0,0,0,0.08);vertical-align:middle}
+
+/* nav icon + label layout */
+.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.nav-icon{display:inline-flex;width:28px;height:20px;align-items:center;justify-content:center}
+.nav-img{width:26px;height:26px;display:block;object-fit:contain}
+.nav-item.active .nav-img{filter:none}
+.nav-item.active{background:linear-gradient(180deg,#0b1220,#0f172a);color:#fff}
+.nav-item.active .nav-label{color:#fff}
+.nav-item.active{box-shadow: inset 3px 3px 6px rgba(0,0,0,0.12)}
+.nav-label{font-size:13px;line-height:1;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Enhanced visuals for nav pills and header buttons (mirrored from src) */
+.nav-item{
+  background: linear-gradient(180deg,#fbfdff,#eef6ff);
+  border-radius:16px;
+  padding:8px 12px;
+  box-shadow: 6px 6px 18px rgba(16,24,40,0.06), -6px -6px 18px rgba(255,255,255,0.85);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+.nav-item:hover{
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 10px 10px 22px rgba(16,24,40,0.09), -8px -8px 20px rgba(255,255,255,0.9);
+}
+.nav-item:focus{outline:3px solid rgba(21,128,61,0.14);outline-offset:4px}
+.nav-item .nav-img{width:30px;height:30px}
+.nav-icon{width:30px;height:28px}
+.nav-label{font-size:13px;color:#0f172a;font-weight:600}
+.nav-item.active{
+  background: linear-gradient(180deg,#0b1220,#0f172a);
+  color:#fff;
+  transform:translateY(-2px) scale(1.04);
+  box-shadow: inset 3px 3px 10px rgba(0,0,0,0.15), 6px 6px 20px rgba(0,0,0,0.08);
+}
+
+/* Header action buttons (controls-center) */
+.controls-center .btn{
+  border-radius:50%;
+  width:48px;
+  height:48px;
+  min-width:48px;
+  min-height:48px;
+  max-width:48px;
+  max-height:48px;
+  padding:0;
+  font-size:1.6rem;
+  display:flex;align-items:center;justify-content:center;
+  background: #f6f9fc;
+  box-shadow: 10px 10px 18px #e9eef5, -10px -10px 18px #fff;
+  border: none;
+  margin: 0;
+  transition: box-shadow 0.18s, background 0.18s, transform 0.12s;
+}
+
+/* Credit card summary widget (Icons8 cartao) */
+.card.credit-card.credit-bg{position:relative;padding:32px 28px;border-radius:18px;overflow:visible;/* prefer user local copy, then docs/img, then CDN */background-image: url('file:///C:/Users/wesle/Downloads/cartao.png'), url('img/card-bg.png'), url('https://img.icons8.com/fluency/340/000000/credit-card.png');background-repeat:no-repeat;background-size:cover;background-position:center;min-height:240px}
+.card.credit-card.credit-bg .credit-bg-img{display:none}
+.card.credit-card .credit-overlay{position:absolute;inset:0;padding:0;color:transparent}
+.card.credit-card .credit-overlay .stat-box{position:absolute;background:#fff;color:#0f172a;padding:8px;border-radius:6px;box-shadow:0 6px 18px rgba(16,24,40,0.06);min-width:120px}
+.card.credit-card .credit-overlay .stat-box.small{min-width:120px;padding:8px}
+.card.credit-card .credit-overlay .stat-box.medium{min-width:160px;padding:10px}
+.card.credit-card .credit-overlay .stat-box.large{min-width:220px;padding:12px}
+.card.credit-card .credit-overlay .stat-title{font-size:12px;color:#374151;margin-bottom:6px}
+.card.credit-card .credit-overlay .stat-amount{font-weight:800;font-size:16px}
+.card.credit-card .credit-overlay .stat-amount.danger{color:var(--danger)}
+.card.credit-card .credit-overlay .summary-row{display:flex;gap:18px;align-items:center}
+.card.credit-card .credit-overlay .summary-item{background:transparent;padding:0}
+.card.credit-card .credit-overlay .summary-label{font-size:13px;color:#111;margin-bottom:6px}
+.card.credit-card .credit-overlay .summary-value{font-weight:800;font-size:16px}
+
+/* precise positions to match the provided mock */
+.card.credit-card .credit-overlay .top-left{left:28px;top:26px;z-index:3}
+.card.credit-card .credit-overlay .top-center{left:50%;top:26px;transform:translateX(-50%);z-index:3}
+.card.credit-card .credit-overlay .top-right{right:28px;top:26px;z-index:3}
+.card.credit-card .credit-overlay .mid-left{left:28px;top:70%;z-index:3}
+.card.credit-card .credit-overlay .bottom-left{left:28px;bottom:42px;z-index:2}
+/* right-summary removed: Gastos do Mês moved/removed per request */
+
+/* small right-side summary used inside the credit card for 'Gastos do Mês' - transparent, white typography matching other stats */
+.card.credit-card .credit-overlay .summary-row{display:flex;gap:8px;align-items:center}
+.card.credit-card .credit-overlay .summary-item{background:transparent;padding:0;text-align:right}
+.card.credit-card .credit-overlay .summary-label{font-size:14px;color:rgba(255,255,255,0.95);font-weight:700;margin-bottom:4px}
+.card.credit-card .credit-overlay .summary-value{font-weight:800;font-size:18px;color:#fff;line-height:1}
+.card.credit-card .credit-overlay .card-chip{position:absolute;left:-4%;top:-4%;width:108%;height:108%;object-fit:cover;border-radius:inherit;z-index:0;pointer-events:none;transform-origin:center center;transform:scale(1.02)}
+.card.credit-card .credit-overlay .card-meta{position:absolute;right:16px;bottom:14px;color:rgba(255,255,255,0.9);text-align:right}
+.card.credit-card .credit-overlay .credit-name{font-size:12px;font-weight:700;color:#fff}
+.card.credit-card .credit-overlay .credit-last4{font-size:12px;color:#fff;opacity:0.9}
+
+/* compact card transactions removed per request */
+
+/* Taxa de Economia - small label at bottom-right of card */
+.card.credit-card .credit-overlay .credit-taxa{
+  position:absolute;
+  right:20px;
+  top:80%;
+  transform:translateY(-50%);
+  color:#fff;
+  text-align:right;
+  z-index:3;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:6px; /* increased spacing between label and value */
+}
+.card.credit-card .credit-overlay .credit-taxa .stat-amount{font-weight:800;font-size:18px;line-height:1}
+.card.credit-card .credit-overlay .credit-taxa .stat-title{font-size:14px;font-weight:700;color:rgba(255,255,255,0.95);margin-bottom:4px}
+
+/* Make the top-left stat (Renda Total) sit directly on the card: transparent background, white text */
+.card.credit-card .credit-overlay .top-left{
+  background: none !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
+  border: none !important;
+  border-radius: 0 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  z-index: 2;
+}
+.card.credit-card .credit-overlay .top-left .stat-title{ color: rgba(255,255,255,0.95) !important; font-weight:700; font-size:14px; margin-bottom:4px }
+.card.credit-card .credit-overlay .top-left .stat-amount{ color: #fff !important; font-weight:800; font-size:18px; line-height:1 }
+
+/* Apply same typography to top-right (Gastos Totais) but keep danger color */
+.card.credit-card .credit-overlay .top-right .stat-title{ color: rgba(255,255,255,0.95) !important; font-weight:700; font-size:14px; margin-bottom:4px }
+.card.credit-card .credit-overlay .top-right .stat-amount{ color: #fff !important; font-weight:800; font-size:18px; line-height:1 }
+.card.credit-card .credit-overlay .top-right .stat-amount.danger{ color: var(--danger) !important; }
+
+/* remove white box for the top-right stat so it sits directly on the card */
+.card.credit-card .credit-overlay .top-right{
+  background: none !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
+  border: none !important;
+  border-radius: 0 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  z-index: 3;
+}
+
+/* top-center (Saldo Atual) styling - transparent overlay + same typography */
+.card.credit-card .credit-overlay .top-center{
+  background: none !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
+  border: none !important;
+  border-radius: 0 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 3;
+}
+.card.credit-card .credit-overlay .top-center .stat-title{ color: rgba(255,255,255,0.95) !important; font-weight:700; font-size:14px; margin-bottom:4px }
+.card.credit-card .credit-overlay .top-center .stat-amount{ color: #fff !important; font-weight:800; font-size:18px; line-height:1 }
+
+/* Make mid-left (Saldo Atual) transparent and styled to sit on the card */
+.card.credit-card .credit-overlay .mid-left{
+  background: none !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
+  border: none !important;
+  border-radius: 0 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  z-index: 3;
+}
+
+/* small sub-label for counts under a stat (used for transactions count) */
+.card.credit-card .credit-overlay .top-right .stat-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.92);
+  /* pushed much further down (approx. +60% from previous) */
+  margin-top: 36px;
+  transform: translateY(18px);
+  opacity: 0.95;
+  font-weight: 600;
+}
+
+.card.credit-card .credit-overlay .top-right .stat-sub .tx-num{
+  font-weight: 800;
+  margin-left: 6px;
+  color: #fff;
+  background: rgba(255,255,255,0.06);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+@media (max-width: 480px){
+  /* reduce the push on small screens so elements don't overlap */
+  .card.credit-card .credit-overlay .top-right .stat-sub{
+    margin-top: 26px;
+    transform: translateY(12px);
+  }
+}
+.card.credit-card .credit-overlay .mid-left .stat-title{ color: rgba(255,255,255,0.95) !important; font-weight:700; font-size:14px; margin-bottom:4px }
+.card.credit-card .credit-overlay .mid-left .stat-amount{ color: #fff !important; font-weight:800; font-size:18px; line-height:1 }
+
+@media (max-width:480px){
+  .card.credit-card .credit-overlay .stat-box{min-width:86px;padding:6px}
+  .card.credit-card .credit-overlay .top-left{left:12px;top:12px}
+  .card.credit-card .credit-overlay .top-center{left:50%;top:14px}
+  .card.credit-card .credit-overlay .top-right{right:12px;top:12px}
+  .card.credit-card .credit-overlay .mid-left{left:12px;top:72%}
+  .card.credit-card .credit-overlay .credit-taxa{right:12px;top:80%;transform:translateY(-50%)}
+  .card.credit-card .credit-overlay .bottom-left{left:12px;bottom:12px}
+  /* right-summary mobile rule removed */
+  .card.credit-card .credit-overlay .card-chip{left:-3%;top:-3%;width:106%;height:106%;object-fit:cover;border-radius:inherit;z-index:0}
+}
+.card.credit-card .credit-overlay .card-extra-png{position:absolute;left:50%;transform:translateX(-50%);bottom:8px;width:120px;height:auto;opacity:0.98;pointer-events:none}
+@media (max-width:480px){
+  .card.credit-card .credit-overlay .card-extra-png{width:90px;bottom:6px}
+}
+.card.credit-card .credit-row{display:flex;justify-content:space-between;align-items:center}
+.card.credit-card .credit-title{font-size:12px;opacity:0.9}
+.card.credit-card .credit-value{font-size:16px;font-weight:700;color:#fff}
+@media (max-width:600px){
+  .card.credit-card .credit-overlay{inset:8px;padding:8px}
+  .card.credit-card .credit-value{font-size:14px}
+  .card.credit-card.credit-bg .credit-overlay{position:absolute;inset:0;padding:14px;display:grid;grid-template-areas:'top top' 'middle middle' 'bottom bottom';grid-template-rows:auto 1fr auto;gap:8px;color:#fff}
+  .card.credit-card .credit-top{grid-area:top;display:flex;justify-content:space-between;align-items:center}
+  .card.credit-card .credit-small{font-size:13px;opacity:0.95}
+  .card.credit-card .credit-middle{grid-area:middle;display:flex;justify-content:space-between;align-items:end;gap:12px}
+  .card.credit-card .credit-saldo{font-size:20px;font-weight:800}
+  .card.credit-card .credit-last4{font-size:18px;font-weight:700}
+  .card.credit-card .credit-bottom{grid-area:bottom;display:flex;justify-content:space-between;align-items:center}
+  .card.credit-card .credit-name{font-size:12px;font-weight:700;letter-spacing:0.6px}
+  .card.credit-card .credit-brand{font-size:16px;font-weight:800}
+  .card.credit-card .credit-taxa{position:absolute;right:12px;bottom:10px;font-size:12px;opacity:0.95}
+  @media (max-width:600px){
+    .card.credit-card .credit-overlay{padding:10px}
+    .card.credit-card .credit-saldo{font-size:16px}
+    .card.credit-card .credit-last4{font-size:14px}
+  }
+}
+.controls-center .btn:hover{transform:translateY(-3px);box-shadow:10px 12px 24px rgba(16,24,40,0.08)}
+.controls-center .btn:active{transform:translateY(0);box-shadow:6px 8px 18px rgba(16,24,40,0.04)}
+.controls-center .btn:focus{outline:3px solid rgba(21,128,61,0.14);outline-offset:4px}
+.controls-center .btn.primary{background:linear-gradient(180deg,#16a34a,#0ea15a);color:#fff}
+
+/* Make the 'Gastos' (expense) header action button blue while keeping neumorphism */
+.controls-center #add-expense{
+  background: linear-gradient(180deg,#2563eb,#1e40af);
+  color: #fff;
+  box-shadow: 12px 12px 24px rgba(14,46,168,0.12), -12px -12px 24px rgba(255,255,255,0.9);
+}
+.controls-center #add-expense .btn-plus{ color: #fff; }
+/* Ensure the + icon inside both header circular buttons is white */
+.controls-center .btn .btn-plus{ color: #fff; }
+.controls-center #add-expense:active{ box-shadow: 6px 8px 18px rgba(14,46,168,0.06); background: linear-gradient(180deg,#1e40af,#1e3a8a); }
+
+/* Tighter icon + label alignment for the screenshot-like pills */
+.nav-item{flex-direction:column;gap:6px;padding-top:10px;padding-bottom:10px}
+.nav-label{font-size:12px}
+
+/* Keep pill width but allow icons to breathe on small screens */
+@media (max-width:420px){
+  .nav-item{min-width:64px;padding:6px 8px;border-radius:12px}
+  .controls-center .btn{min-width:72px;padding:6px 8px}
+}
+
+@media (max-width:420px){
+  :root{--nav-item-w:72px}
+  .nav-item{gap:2px}
+  .nav-icon{width:22px;height:18px}
+  .nav-svg{width:16px;height:16px}
+  .nav-label{font-size:11px}
+}
+
+/* revert absolute positioning on very small screens to avoid overlap (<=400px) */
+@media (max-width:400px){
+  #add-expense{position:static;right:auto;top:auto;margin-left:8px}
+}
+
+/* Ensure header stacks and buttons center on phone sizes to avoid overlap */
+@media (max-width:480px){
+  .header-row{flex-direction:column;align-items:center;text-align:center}
+  .title-wrap{width:100%;align-items:center}
+  .controls-center{justify-content:center;flex-wrap:wrap}
+  /* Buttons stack under the title and center */
+  .controls-center .btn{min-width:96px;margin:6px 6px}
+  #add-expense{position:static;right:auto;top:auto;margin-left:0}
+}
+
+/* upcoming due notices under the header controls */
+#upcoming-notices{margin-top:10px;font-size:13px;color:#0f172a;display:flex;flex-direction:column;gap:6px;align-items:center}
+#upcoming-notices .notice{background:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 6px 18px rgba(16,24,40,0.06);width:100%;max-width:520px;display:flex;align-items:center;gap:10px;text-align:left}
+#upcoming-notices .notice .cat-img{width:28px;height:28px;flex:0 0 28px;object-fit:contain;border-radius:6px;margin-right:8px}
+#upcoming-notices .notice .notice-body{flex:1;min-width:0}
+#upcoming-notices .notice.urgent{border-left:4px solid var(--danger)}
+
+/* Notice body: separate title and meta so we can align lines consistently */
+#upcoming-notices .notice .notice-body strong{display:block;font-weight:700;margin-bottom:4px}
+#upcoming-notices .notice .notice-body .meta{font-size:12px;color:var(--muted);margin-top:0}
+
+/* Standardize category inline blocks used in lists */
+.cat-inline{display:flex;align-items:center;gap:10px}
+.cat-inline .cat-img{width:26px;height:26px;border-radius:6px}
+.cat-inline .cat-name{font-weight:600;color:#111}
+
+/* Recent transactions: ensure left column wraps and right column aligns */
+.recent-box .tx{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.recent-box .tx > div:first-child{flex:1;min-width:0}
+.recent-box .tx strong{display:block}
+.recent-box .tx .meta{font-size:12px;color:var(--muted);margin-top:6px}
+/* chart sizing */
+.chart-wrap{width:260px;margin:10px auto;height:260px;display:flex;align-items:center;justify-content:center;border-radius:14px;padding:12px;background:linear-gradient(180deg,var(--card),#eef6ff);box-shadow:6px 6px 14px var(--shadow-dark), -6px -6px 14px var(--shadow-light)}
+.chart-wrap canvas{max-width:100%;max-height:100%}
+/* Make the category chart wider and more prominent */
+#chart-by-category{width:760px !important; height:260px !important; display:block}
+#section-reports .box h3{margin-bottom:8px}
+#report-legend-cats{margin-top:12px;text-align:center;font-size:13px}
+
+/* reports layout: stack boxes vertically (one chart per row) */
+.container .box + .box{margin-top:18px}
+#section-reports .box{display:block;width:100%;margin-right:0}
+.chart-wrap{height:260px}
+
+.report-controls{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.report-legend{text-align:center;margin-top:8px}
+
+/* date input styling (neumorphic) */
+.report-controls label{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.report-controls input[type="date"]{
+  -webkit-appearance:none;appearance:none;border:none;background:linear-gradient(180deg,var(--card),#f2f8ff);padding:8px 10px;border-radius:10px;box-shadow: inset 4px 4px 8px var(--shadow-light), inset -4px -4px 8px var(--shadow-dark);cursor:pointer;color:var(--muted)
+}
+.report-controls input[type="date"]:focus{outline:none;box-shadow: inset 2px 2px 6px var(--shadow-light), inset -2px -2px 6px var(--shadow-dark);}
+.report-controls button{height:36px}
+
+/* Targeted: ensure side-by-side layout at narrow 360px-width devices */
+@media (max-width:360px) {
+  .header-row{flex-direction:column;align-items:flex-start}
+  .title-wrap{width:100%;flex-basis:auto}
+  .controls-center{width:100%;justify-content:space-between;gap:8px;flex-wrap:nowrap}
+  .controls-center .btn{min-width:calc(50% - 8px);max-width:calc(50% - 8px);flex:0 0 calc(50% - 8px);padding:8px 8px}
+}
+
+/* Stronger: prevent nav and controls from wrapping on very narrow screens (<=380px) */
+@media (max-width:380px) {
+  .topbar .nav{flex-wrap:nowrap;overflow-x:auto;gap:18px;justify-content:center}
+  .nav-item{white-space:nowrap;flex:0 0 auto;padding:6px 8px;margin-right:15px}
+  /* center title and controls on exact-380px phones */
+  .title-wrap{width:100%;align-items:center;text-align:center}
+  /* increase lateral spacing between buttons to match requested spacing (50% larger) */
+  .controls-center{flex-wrap:nowrap;gap:18px;justify-content:center;width:100%}
+  /* At exact 380px phones increase buttons by 20% but keep them from overflowing */
+  .controls-center .btn{flex:0 0 48%;min-width:calc(48% * 1.1);max-width:48%;padding:7px 8px;transform-origin:center center;transform:scale(1.08);margin:0}
+  /* Make nav pills slightly larger to match visual weight */
+  .nav-item{transform-origin:center center;transform:scale(1.2)}
+}
+
+/* Small-screen horizontal scroll for nav and header buttons */
+@media (max-width:420px){
+  .topbar .nav, .controls-center{overflow-x:auto;white-space:nowrap}
+  .topbar .nav{display:flex;flex-wrap:nowrap}
+  .controls-center{display:flex;flex-wrap:nowrap;gap:8px}
+  .controls-center .btn{flex:0 0 auto}
+  /* subtle scrollbar hiding for WebKit-based browsers */
+  .topbar .nav::-webkit-scrollbar, .controls-center::-webkit-scrollbar{height:8px}
+  .topbar .nav::-webkit-scrollbar-thumb, .controls-center::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.08);border-radius:6px}
+}
