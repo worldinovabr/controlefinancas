@@ -293,11 +293,18 @@ function render() {
         const div = document.createElement('div');
         div.className = 'tx';
         let installmentInfo = '';
-        if (t.installmentsTotal && t.installmentsTotal > 1) {
-            const paid = t.installmentsPaid || 0;
-            const per = t.perInstallment || (t.value / t.installmentsTotal);
-            const left = Math.max(0, (t.installmentsTotal || 0) - paid);
-            installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas — ${left} faltam — R$ ${formatMoney(per)}</div>`;
+        let rightAmount = t.value;
+        if (t.installmentsTotal && Number(t.installmentsTotal) > 1) {
+            // normalize numeric fields (they may be stored as strings)
+            const paid = Number(t.installmentsPaid || 0);
+            const totalInst = Number(t.installmentsTotal || 0);
+            // per-installment: prefer explicit perInstallment, otherwise assume t.value is TOTAL and divide by installments
+            const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / totalInst));
+            const left = Math.max(0, totalInst - paid);
+            const remaining = per * left;
+            installmentInfo = `<div class="meta">Parcela: ${paid}/${totalInst} pagas — ${left} faltam — R$ ${formatMoney(per)} cada — <strong>Falta pagar: R$ ${formatMoney(remaining)}</strong></div>`;
+            // show remaining total on the right column so it's clearly visible (only if there's remaining to pay)
+            rightAmount = left > 0 ? remaining : t.value;
         }
         const dueLabel = t.dueDate ? (() => { const p = t.dueDate.split('-'); if (p.length === 3)
             return `${p[2]}/${p[1]}/${p[0]}`; return t.dueDate; })() : '';
@@ -309,7 +316,7 @@ function render() {
         ${installmentInfo}
       </div>
       <div style="text-align:right">
-        <div style="color:${t.type === 'expense' ? 'var(--danger)' : 'var(--accent)'}">R$ ${formatMoney(t.value)}</div>
+    <div style="color:${t.type === 'expense' ? 'var(--danger)' : 'var(--accent)'}">R$ ${formatMoney(rightAmount)}</div>
         <div class="tx-actions">
           <button class="btn" title="Editar" onclick="editTx('${t.id}')">✏️</button>
           <button class="btn" title="Remover" onclick="removeTx('${t.id}')">🗑️</button>
@@ -369,12 +376,15 @@ function renderUpcoming() {
             const totalInst = t.installmentsTotal && t.installmentsTotal > 1 ? t.installmentsTotal : 1;
             const per = t.perInstallment || (t.value / totalInst);
             const paid = t.installmentsPaid || 0;
+                // compute remaining installments count and remaining total
+                const remainingCount = Math.max(0, totalInst - paid);
+                const remainingTotal = per * remainingCount;
                 for (let k = paid; k < totalInst; k++) {
                     const instDt = new Date(startDt.getFullYear(), startDt.getMonth() + k, startDt.getDate());
                     const diff = Math.ceil((instDt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                     // only include installments that are today..31 days ahead
                     if (diff >= 0 && diff <= 31) {
-                        localList.push({ id: t.id, desc: t.desc, due: instDt, days: diff, amount: per, category: t.category });
+                        localList.push({ id: t.id, desc: t.desc, due: instDt, days: diff, amount: per, category: t.category, remainingCount, remainingTotal });
                         upcomingFound++;
                     }
                 }
@@ -392,7 +402,9 @@ function renderUpcoming() {
             const daysText = it.days > 0 ? `${it.days} dias` : (it.days === 0 ? 'hoje' : `${Math.abs(it.days)} dias atras`);
             const urgent = it.days <= 3 ? 'urgent' : '';
             const icon = categoryIcon(it.category);
-            return `<div class="notice ${urgent}">${icon}<div class="notice-body"><strong>${it.desc}</strong> — R$ ${formatMoney(it.amount)} — vence ${label} (${daysText})</div></div>`;
+            // show per-installment amount and remaining total to pay (if > 0)
+            const remainingHtml = it.remainingTotal && it.remainingTotal > 0 ? ` — <strong>Falta pagar: R$ ${formatMoney(it.remainingTotal)}</strong>` : '';
+            return `<div class="notice ${urgent}">${icon}<div class="notice-body"><strong>${it.desc}</strong> — R$ ${formatMoney(it.amount)}${remainingHtml} — vence ${label} (${daysText})</div></div>`;
         }).join('');
     }
     // First render immediately using client clock so UI is responsive
