@@ -82,6 +82,56 @@ if (installBtn) {
         }
     });
 }
+
+    // In-app one-time install banner shown on first open (session-based)
+    function createInstallBanner(){
+            if(sessionStorage.getItem('install_banner_shown')) return null;
+            const b = document.createElement('div');
+            b.className = 'install-banner';
+            b.innerHTML = `
+                <div class="install-banner-inner">
+                    <div class="install-banner-text">Deseja instalar o app Controle Financeiro para acessar rapidamente?</div>
+                    <div class="install-banner-actions">
+                        <button class="btn small btn-install-now">Instalar</button>
+                        <button class="btn small btn-install-dismiss">Fechar</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(b);
+            // mark shown for this session
+            sessionStorage.setItem('install_banner_shown', '1');
+            // wiring
+            b.querySelector('.btn-install-dismiss').addEventListener('click', ()=> b.remove());
+            b.querySelector('.btn-install-now').addEventListener('click', async ()=>{
+                    // prefer deferredPrompt if available
+                    if(deferredPrompt){
+                            deferredPrompt.prompt();
+                            const choice = await deferredPrompt.userChoice;
+                            deferredPrompt = null;
+                            b.remove();
+                            hideInstallButton();
+                            return;
+                    }
+                    // iOS fallback
+                    if(/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) && !window.matchMedia('(display-mode: standalone)').matches){
+                            const t = document.createElement('div');
+                            t.className = 'install-tooltip';
+                            t.innerHTML = 'Toque em <strong>Compartilhar</strong> e depois <strong>Adicionar à Tela de Início</strong>.';
+                            document.body.appendChild(t);
+                            setTimeout(()=>t.remove(),6000);
+                            return;
+                    }
+                    // fallback: show the header install button as a hint
+                    showInstallButton();
+            });
+            return b;
+    }
+
+    // show banner on load (if not installed and not already shown this session)
+    window.addEventListener('load', ()=>{
+            // do not show if already installed / display-mode is standalone
+            if(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return;
+            createInstallBanner();
+    });
 function load() {
     try {
         const raw = localStorage.getItem(KEY);
