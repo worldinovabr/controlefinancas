@@ -129,7 +129,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
   font-size:12px;
   text-align:start;
   background: linear-gradient(90deg, #2828d66f 0%, #2828d66f 100%);
-  color: #fff;
+  color: #111111;
   border-radius: 14px;
   padding: 10px 18px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.10);
