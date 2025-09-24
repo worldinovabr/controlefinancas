@@ -97,8 +97,21 @@
 *{box-sizing:border-box}
 body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);margin:0;color:#111}
 .topbar{display:flex;align-items:center;gap:16px;padding:18px 40px;background:var(--card);border-radius:14px;margin:12px 20px;box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light)}
-.topbar{padding:24px 48px;min-height:90px}
+.topbar{padding:24px 48px;min-height:80px}
 .topbar .brand{font-weight:700}
+/* Brand background to improve visibility */
+.topbar .brand{
+  background: #0f172a; /* dark / black-like background */
+  padding:8px 42px; /* further increased horizontal padding per user request */
+  border-radius:10px;
+  box-shadow: 4px 6px 14px rgba(16,24,40,0.06);
+  display:inline-block;
+  color: #ffffff; /* white text */
+  white-space:nowrap; /* keep brand on a single line */
+  overflow:hidden;
+  margin-left: -8px;
+  text-overflow:ellipsis;
+}
 .topbar .nav{display:flex;gap:6px;flex:1}
 .nav-item{padding:6px 10px;border-radius:14px;color:var(--muted);text-decoration:none;font-size:15px}
 .nav-item{padding:6px 10px;border-radius:12px;color:var(--muted);text-decoration:none;font-size:15px;background:var(--card);box-shadow: 14px 14px 36px rgba(163,177,198,0.38), -14px -14px 36px rgba(255,255,255,0.92);transition:box-shadow 200ms ease, transform 180ms ease, background 180ms ease}
@@ -230,6 +243,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 /* Mobile responsiveness improvements */
 @media (max-width: 480px) {
   .topbar{flex-direction:column;align-items:flex-start;padding:12px}
+  .topbar .brand{padding:6px 42px;border-radius:6px;color:#fff}
   .topbar .nav{width:100%;display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
   .nav-item{font-size:14px;padding:8px 10px}
   .topbar .saldo{align-self:flex-end;font-size:12px}

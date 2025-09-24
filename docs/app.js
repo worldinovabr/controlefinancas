@@ -46,6 +46,15 @@ window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
     hideInstallButton();
 });
+
+// Register service worker for offline support and to meet PWA requirements
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+            console.log('Service worker registered:', reg.scope);
+        }).catch(err => console.warn('Service worker registration failed:', err));
+    });
+}
 // Click handler for our install button
 if (installBtn) {
     installBtn.addEventListener('click', async () => {
