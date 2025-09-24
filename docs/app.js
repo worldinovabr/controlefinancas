@@ -21,6 +21,58 @@ const txPerInstallment = document.getElementById('tx-per-installment');
 const txDueDate = document.getElementById('tx-due-date');
 const cancelBtn = document.getElementById('cancel');
 let txs = [];
+// PWA install prompt handling
+let deferredPrompt = null;
+const installBtn = document.getElementById('btn-install');
+function showInstallButton() {
+    if (!installBtn) return;
+    installBtn.classList.remove('hidden');
+    installBtn.setAttribute('aria-hidden', 'false');
+}
+function hideInstallButton() {
+    if (!installBtn) return;
+    installBtn.classList.add('hidden');
+    installBtn.setAttribute('aria-hidden', 'true');
+}
+// Listener: when the browser fires beforeinstallprompt, capture it and show our button
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallButton();
+});
+// If app is already installed, hide the button
+window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    hideInstallButton();
+});
+// Click handler for our install button
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        // If we have a deferred prompt (Chrome, Edge, Android), show it
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const choiceResult = await deferredPrompt.userChoice;
+            if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the A2HS prompt');
+            }
+            else {
+                console.log('User dismissed the A2HS prompt');
+            }
+            deferredPrompt = null;
+            hideInstallButton();
+            return;
+        }
+        // iOS fallback: show small tooltip with instructions
+        if (/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) && !window.matchMedia('(display-mode: standalone)').matches) {
+            const t = document.createElement('div');
+            t.className = 'install-tooltip';
+            t.innerHTML = 'Toque em <strong>Compartilhar</strong> e depois <strong>Adicionar à Tela de Início</strong> para instalar.';
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 6000);
+        }
+    });
+}
 function load() {
     try {
         const raw = localStorage.getItem(KEY);

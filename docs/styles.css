@@ -116,6 +116,11 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 /* push first btn-group to the left and last to the right */
 .controls-center .btn-group:first-child{margin-right:auto}
 .controls-center .btn-group:last-child{margin-left:auto}
+/* Install button in the header */
+.btn.install{
+  position:relative;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,#f8fbfe,#eef6fb);box-shadow:8px 8px 18px rgba(163,177,198,0.28), -8px -8px 18px rgba(255,255,255,0.9);border:none;color:#0f172a;font-weight:700;margin-left:12px}
+.btn.install.hidden{display:none !important}
+.install-tooltip{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:rgba(16,24,40,0.95);color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 24px rgba(16,24,40,0.2);z-index:9999}
 .btn{border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg,var(--card),#eef4fb);padding:8px 12px;border-radius:12px;cursor:pointer;box-shadow:4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light)}
 .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
