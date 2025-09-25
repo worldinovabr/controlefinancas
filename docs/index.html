@@ -316,17 +316,36 @@
           try{
             var migrated = 0;
             txs = txs.map(function(t){
-              if(!t._dueDateExplicit && t.date && !t.dueDate){
-                var parts = (t.date||'').split('/');
-                if(parts.length===3){
-                  t.dueDate = parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
-                  // do not set t._dueDateExplicit here
-                  migrated++;
+                if(!t._dueDateExplicit && !t._migratedFromDate && t.date && !t.dueDate){
+                  var parts = (t.date||'').split('/');
+                  if(parts.length===3){
+                    t.dueDate = parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
+                    // mark migrated so we don't reapply this conversion repeatedly
+                    t._migratedFromDate = true;
+                    // do not set t._dueDateExplicit here
+                    migrated++;
+                  }
                 }
-              }
               return t;
             });
             if(migrated>0) console.info('Migrated '+migrated+' transactions: converted legacy date -> dueDate (kept non-explicit)');
+          }catch(e){console.error(e)}
+          // Sanitize legacy-converted dueDates: if the dueDate equals the simple
+          // conversion from the old `date` and the user did not explicitly set
+          // a due date, remove it so the item won't appear in Upcoming.
+          try{
+            txs = txs.map(function(t){
+              try{
+                if(t.dueDate && !t._dueDateExplicit && t.date){
+                  var p = (t.date||'').split('/');
+                  if(p.length===3){
+                    var conv = p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+                    if(conv === t.dueDate){ delete t.dueDate; t._migratedFromDate = true; }
+                  }
+                }
+              }catch(e){}
+              return t;
+            });
           }catch(e){console.error(e)}
   try{ localStorage.setItem(KEY, JSON.stringify(txs)) }catch(e){}
         render();
@@ -484,18 +503,26 @@
         const due = txDueDate && txDueDate.value ? txDueDate.value : undefined;
         if(!desc || isNaN(value) || value<=0) return alert('Preencha descrição e valor válido');
         const existing = txId.value;
-        if(existing){
+            if(existing){
           const idx = txs.findIndex(x=>x.id===existing);
           if(idx!==-1){
             txs[idx].desc = desc; txs[idx].value = value; txs[idx].type = t;
             txs[idx].installmentsTotal = instTotal; txs[idx].installmentsPaid = instPaid; txs[idx].perInstallment = perInst; 
-            txs[idx].dueDate = due;
-            txs[idx]._dueDateExplicit = !!due;
+                // If user cleared the due date, remove the property and mark as non-explicit
+                if(due){
+                  txs[idx].dueDate = due;
+                  txs[idx]._dueDateExplicit = true;
+                } else {
+                  delete txs[idx].dueDate;
+                  txs[idx]._dueDateExplicit = false;
+                }
           }
         }else{
             const newTx = { id: Math.random().toString(36).slice(2,9), type: t, desc, value, date: new Date().toLocaleDateString(), category: categorize(desc, t), installmentsTotal: instTotal, installmentsPaid: instPaid, perInstallment: perInst, dueDate: due };
             // mark whether the user explicitly set a due date for filtering
             newTx._dueDateExplicit = !!due;
+            // if user did not set a due date we also mark that we didn't migrate it from old `date`
+            if(!due) newTx._migratedFromDate = false;
             txs.push(newTx);
         }
         save(); render(); closeModal();

@@ -152,15 +152,40 @@ function load() {
     // to appear in Upcoming when the user actually provided a due date.
     let migrated = 0;
     txs = txs.map(t => {
-        if (!t._dueDateExplicit && t.date && !t.dueDate) {
+        // Only migrate legacy `date` -> `dueDate` once. Use a marker `_migratedFromDate`
+        // so that if the user later clears the due date we don't re-create it again.
+        if (!t._dueDateExplicit && !t._migratedFromDate && t.date && !t.dueDate) {
             const parts = (t.date || '').split('/');
             if (parts.length === 3) {
                 t.dueDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                // mark migrated so we don't reapply this conversion repeatedly
+                t._migratedFromDate = true;
                 // IMPORTANT: do not set t._dueDateExplicit here. Keep it false so Upcoming
                 // only shows items where the user explicitly entered a due date.
                 migrated++;
             }
         }
+        return t;
+    });
+    // Sanitize legacy-converted dueDates: if a transaction has a dueDate but it's
+    // identical to a straightforward conversion from its old `date` field and
+    // was not explicitly set by the user, treat it as migrated and remove it so
+    // it won't reappear in Upcoming unless the user re-adds and saves a due date.
+    txs = txs.map(t => {
+        try {
+            if (t.dueDate && !t._dueDateExplicit && t.date) {
+                const parts = (t.date || '').split('/');
+                if (parts.length === 3) {
+                    const conv = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    if (conv === t.dueDate) {
+                        // this was auto-created from the legacy `date` -> remove it
+                        delete t.dueDate;
+                        t._migratedFromDate = true;
+                    }
+                }
+            }
+        }
+        catch (e) { }
         return t;
     });
     if (migrated > 0)
@@ -333,10 +358,10 @@ function render() {
                 }
             }
     }
-            const dueLabel = t.dueDate ? (() => { const p = t.dueDate.split('-'); if (p.length === 3)
+            const dueLabel = (t._dueDateExplicit && t.dueDate) ? (() => { const p = t.dueDate.split('-'); if (p.length === 3)
                 return `${p[2]}/${p[1]}/${p[0]}`; return t.dueDate; })() : '';
-        // Only show vencimento for expenses when user set a dueDate
-        const vencLine = (t.type === 'expense' && dueLabel) ? `<div class="meta">Venc.: ${dueLabel}</div>` : '';
+        // Only show vencimento for expenses when the user explicitly set a dueDate
+        const vencLine = (t.type === 'expense' && t._dueDateExplicit && dueLabel) ? `<div class="meta">Venc.: ${dueLabel}</div>` : '';
             // Only show Data if transaction has a stored date
             const dateLine = t.date ? `<div class="meta">Data: ${t.date}</div>` : '';
         // For single-payment transactions, only show total if it's an expense
