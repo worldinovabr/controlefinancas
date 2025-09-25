@@ -53,6 +53,10 @@
             </button>
             <span class="btn-label">Renda</span>
           </div>
+          <!-- Money bag icon between buttons -->
+          <div class="btn-icon-wrap" aria-hidden="true">
+            <img class="money-bag-icon" src="https://img.icons8.com/3d-fluency/48/money-bag.png" onerror="this.onerror=null;this.src='https://img.icons8.com/color/48/money-bag.png'" alt="Money bag" />
+          </div>
           <div class="btn-group">
             <button id="add-expense" class="btn" onclick="openModal('expense')">
               <span class="btn-plus">+</span>
@@ -392,26 +396,37 @@
           txs.slice().reverse().forEach(t=>{
             const div = document.createElement('div');
             div.className = 'tx';
-            // build installment info and due label for compact card
+            // build multi-line meta for recent card
             let installmentInfo = '';
-            if(t.installmentsTotal && t.installmentsTotal>1){
-              const paid = t.installmentsPaid || 0;
-              const left = Math.max(0, (t.installmentsTotal||0) - paid);
-              // per can be null (user left field empty) — only compute amount when provided
-              const per = (t.perInstallment === null || t.perInstallment === undefined) ? null : (t.perInstallment || (t.value / t.installmentsTotal));
-              if(per === null){
-                installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas: ${left} faltam:</div>`;
-              } else {
-                installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas: ${left} faltam: R$ ${formatMoney(per * left)}</div>`;
-              }
+            // Only build installment info for expenses
+            if(t.type === 'expense' && t.installmentsTotal && t.installmentsTotal>1){
+              const paid = Number(t.installmentsPaid || 0);
+              const totalInst = Number(t.installmentsTotal || 0);
+              const left = Math.max(0, totalInst - paid);
+              const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / totalInst));
+              const parcelasLine = `${paid < totalInst ? (paid + 1) : totalInst}/${totalInst}`;
+              installmentInfo = `
+                <div class="meta">Parcelas: ${parcelasLine}</div>
+                <div class="meta">Pagas: ${paid}</div>
+                <div class="meta">Faltam: ${left}</div>
+                <div class="meta">Total a pagar: R$ ${formatMoney(per * left)}</div>
+              `;
             }
-            const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
+      const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
+      const dateLine = t.date ? `<div class="meta">Data: ${t.date}</div>` : (dueLabel ? `<div class="meta">Data: ${dueLabel}</div>` : `<div class="meta">Data: —</div>`);
+      const singleMeta = (t.type === 'expense') ? `
+        <div class="meta">Parcelas: 1/1</div>
+        <div class="meta">Pagas: ${t.installmentsPaid || 0}</div>
+        <div class="meta">Faltam: ${Math.max(0, 1 - (t.installmentsPaid || 0))}</div>
+        <div class="meta total">Total a pagar: R$ ${formatMoney(t.value)}</div>
+      ` : '';
             div.innerHTML = `
               <div>
                 <div class="cat-inline">${categoryIcon(t.category)} <strong class="cat-name">${t.category || '—'}</strong></div>
                 <strong>${t.desc}</strong>
-                <div class="meta">${t.date}${dueLabel? ' • Venc.: '+dueLabel : ''}</div>
-                ${installmentInfo}
+                ${dateLine}
+                ${dueLabel ? `<div class="meta">Venc.: ${dueLabel}</div>` : ''}
+                ${installmentInfo || singleMeta}
               </div>
               <div style="text-align:right">
                 <div style="color:${t.type==='expense'? 'var(--danger)':'var(--accent)'}">R$ ${formatMoney(t.value)}</div>
@@ -528,22 +543,33 @@
             row.className = 'tx';
             let installmentInfo = '';
             if(t.installmentsTotal && t.installmentsTotal>1){
-              const paid = t.installmentsPaid || 0;
-              const left = Math.max(0, (t.installmentsTotal||0) - paid);
-              const per = (t.perInstallment === null || t.perInstallment === undefined) ? null : (t.perInstallment || (t.value / t.installmentsTotal));
-              if(per === null){
-                installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas — ${left} faltam</div>`;
-              } else {
-                installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas — ${left} faltam — R$ ${formatMoney(per * left)}</div>`;
-              }
+              const paid = Number(t.installmentsPaid || 0);
+              const totalInst = Number(t.installmentsTotal || 0);
+              const left = Math.max(0, totalInst - paid);
+              const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / totalInst));
+              const parcelasLine = `${paid < totalInst ? (paid + 1) : totalInst}/${totalInst}`;
+              installmentInfo = `
+                <div class="meta">Parcelas: ${parcelasLine}</div>
+                <div class="meta">Pagas: ${paid}</div>
+                <div class="meta">Faltam: ${left}</div>
+                <div class="meta">Total a pagar: R$ ${formatMoney(per * left)}</div>
+              `;
             }
-            const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
+  const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
+  const dateLine = t.date ? `<div class="meta">Data: ${t.date}</div>` : '';
+      const singleMeta = (t.type === 'expense') ? `
+        <div class="meta">Parcelas: 1/1</div>
+        <div class="meta">Pagas: ${t.installmentsPaid || 0}</div>
+        <div class="meta">Faltam: ${Math.max(0, 1 - (t.installmentsPaid || 0))}</div>
+        <div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>
+      ` : '';
             row.innerHTML = `
               <div>
                 <div class="cat-inline">${categoryIcon(t.category)} <strong class="cat-name">${t.category || '—'}</strong></div>
                 <strong>${t.desc}</strong>
-                <div class="meta">${t.date}${dueLabel? ' • Venc.: '+dueLabel : ''}</div>
-                ${installmentInfo}
+                ${dateLine}
+                ${t.type === 'expense' && dueLabel ? `<div class="meta">Venc.: ${dueLabel}</div>` : ''}
+                ${t.type === 'expense' ? (installmentInfo || singleMeta) : ''}
               </div>
               <div style="text-align:right">
                 <div style="color:${t.type==='expense'? 'var(--danger)':'var(--accent)'}">R$ ${formatMoney(t.value)}</div>
@@ -580,11 +606,9 @@
           let upcomingFound = 0;
           const localList = [];
           txs.forEach(function(t){
-            // Only include expenses where the user explicitly set a due date.
-            // We do not show incomes or other transaction types even if they
-            // have a dueDate set by the user.
-            if (t.type !== 'expense') return;
-            if (!t._dueDateExplicit || !t.dueDate) return;
+            // Include any transaction that has an explicit due date so incomes
+            // or other entries with a dueDate will appear in upcoming notices.
+            if(!t._dueDateExplicit && !t.dueDate) return;
             const startDt = getStartDate(t);
             const totalInst = t.installmentsTotal && t.installmentsTotal>1 ? t.installmentsTotal : 1;
             const per = t.perInstallment || (t.value / totalInst);
@@ -608,7 +632,8 @@
             const label = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
             const daysText = it.days>0? `${it.days} dias` : (it.days===0? 'hoje' : `${Math.abs(it.days)} dias atras`);
             const urgent = it.days<=3 ? 'urgent' : '';
-            return `<div class="notice ${urgent}"><strong>${it.desc}</strong> — R$ ${formatMoney(it.amount)} — vence ${label} (${daysText})</div>`;
+            // stacked layout
+            return `<div class="notice ${urgent}">${categoryIcon(it.category)}<div class="notice-body"><div class="notice-title"><strong>${it.desc}</strong></div><div class="meta">Valor: R$ ${formatMoney(it.amount)}</div>${it.remainingTotal && it.remainingTotal>0 ? `<div class="meta">Falta pagar: <strong>R$ ${formatMoney(it.remainingTotal)}</strong></div>` : ''}<div class="meta">Vence: ${label} (${daysText})</div></div></div>`;
           }).join('');
         }
         // immediate render with client clock
@@ -722,7 +747,8 @@
           const total = totalIncome + totalExpense;
           const pi = total===0?0: Math.round((totalIncome/total)*1000)/10;
           const pe = total===0?0: Math.round((totalExpense/total)*1000)/10;
-          legend.innerHTML = `<strong>Renda:</strong> R$ ${formatMoney(totalIncome)} (${pi}%) &nbsp; • &nbsp; <strong>Gastos:</strong> R$ ${formatMoney(totalExpense)} (${pe}%)`;
+          // render main legend lines as separate block items
+          legend.innerHTML = `<div class="legend-item"><strong>Renda:</strong> R$ ${formatMoney(totalIncome)} (${pi}%)</div><div class="legend-item"><strong>Gastos:</strong> R$ ${formatMoney(totalExpense)} (${pe}%)</div>`;
         }
         // --- monthly consumption per category (line chart) ---
         try{
@@ -768,7 +794,7 @@
             const legendCats = document.getElementById('report-legend-cats');
             if(legendCats){
               let html = '';
-              categories.forEach((c,i)=> html += `<div style="display:inline-block;margin:6px 8px;vertical-align:middle"><span class="legend-dot" style="background:${palette[i%palette.length]}"></span>${c}: R$ ${formatMoney(totalsPerCat[c]||0)}</div>`);
+              categories.forEach((c,i)=> html += `<div class="legend-item"><span class="legend-dot" style="background:${palette[i%palette.length]}"></span>${c}: R$ ${formatMoney(totalsPerCat[c]||0)}</div>`);
               legendCats.innerHTML = html;
             }
           }

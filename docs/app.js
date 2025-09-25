@@ -293,9 +293,10 @@ function render() {
     txs.slice().reverse().forEach(t => {
         const div = document.createElement('div');
         div.className = 'tx';
-        let installmentInfo = '';
+    let installmentInfo = '';
         let rightAmount = t.value;
-        if (t.installmentsTotal && Number(t.installmentsTotal) > 1) {
+    // Only build installment info for expenses; incomes should only show the date
+    if (t.type === 'expense' && t.installmentsTotal && Number(t.installmentsTotal) > 1) {
             // normalize numeric fields (they may be stored as strings)
             const paid = Number(t.installmentsPaid || 0);
             const totalInst = Number(t.installmentsTotal || 0);
@@ -303,27 +304,46 @@ function render() {
             const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / totalInst));
             const left = Math.max(0, totalInst - paid);
             const remaining = per * left;
-            installmentInfo = `<div class="meta">Parcela: ${paid}/${totalInst} pagas — ${left} faltam — R$ ${formatMoney(per)} cada — <strong>Falta pagar: R$ ${formatMoney(remaining)}</strong></div>`;
-            // show remaining total on the right column so it's clearly visible (only if there's remaining to pay)
-            rightAmount = left > 0 ? remaining : t.value;
+                        // Build multi-line installment info using the requested labels
+                        const parcelasLine = `${paid < totalInst ? (paid + 1) : totalInst}/${totalInst}`;
+                        installmentInfo = `
+                            <div class="meta">Parcelas: ${parcelasLine}</div>
+                            <div class="meta">Pagas: ${paid}</div>
+                            <div class="meta">Faltam: ${left}</div>
+                            <div class="meta">Total a pagar: R$ ${formatMoney(remaining)}</div>
+                        `;
+                        // show remaining total on the right column so it's clearly visible
+                        rightAmount = left > 0 ? remaining : t.value;
         }
-        const dueLabel = t.dueDate ? (() => { const p = t.dueDate.split('-'); if (p.length === 3)
-            return `${p[2]}/${p[1]}/${p[0]}`; return t.dueDate; })() : '';
+            const dueLabel = t.dueDate ? (() => { const p = t.dueDate.split('-'); if (p.length === 3)
+                return `${p[2]}/${p[1]}/${p[0]}`; return t.dueDate; })() : '';
+        // Only show vencimento for expenses when user set a dueDate
+        const vencLine = (t.type === 'expense' && dueLabel) ? `<div class="meta">Venc.: ${dueLabel}</div>` : '';
+            // Only show Data if transaction has a stored date
+            const dateLine = t.date ? `<div class="meta">Data: ${t.date}</div>` : '';
+        // For single-payment transactions, only show total if it's an expense
+            const singleMeta = (t.type === 'expense') ? `
+                <div class="meta">Parcelas: 1/1</div>
+                <div class="meta">Pagas: ${t.installmentsPaid || 0}</div>
+                <div class="meta">Faltam: ${Math.max(0, 1 - (t.installmentsPaid || 0))}</div>
+                <div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>
+            ` : '';
         div.innerHTML = `
-      <div>
-        <div class="cat-inline">${categoryIcon(t.category)} <strong class="cat-name">${t.category || '—'}</strong></div>
-        <strong>${t.desc}</strong>
-        <div class="meta">${t.date}${dueLabel ? ' • Venc.: ' + dueLabel : ''}</div>
-        ${installmentInfo}
-      </div>
-      <div style="text-align:right">
-    <div style="color:${t.type === 'expense' ? 'var(--danger)' : 'var(--accent)'}">R$ ${formatMoney(rightAmount)}</div>
-        <div class="tx-actions">
-          <button class="btn" title="Editar" onclick="editTx('${t.id}')">✏️</button>
-          <button class="btn" title="Remover" onclick="removeTx('${t.id}')">🗑️</button>
-        </div>
-      </div>
-    `;
+            <div>
+                <div class="cat-inline">${categoryIcon(t.category)} <strong class="cat-name">${t.category || '—'}</strong></div>
+                <strong>${t.desc}</strong>
+        ${dateLine}
+        ${vencLine}
+            ${installmentInfo || (t.type === 'expense' ? singleMeta : '')}
+            </div>
+            <div style="text-align:right">
+        <div style="color:${t.type === 'expense' ? 'var(--danger)' : 'var(--accent)'}">R$ ${formatMoney(rightAmount)}</div>
+                <div class="tx-actions">
+                    <button class="btn" title="Editar" onclick="editTx('${t.id}')">✏️</button>
+                    <button class="btn" title="Remover" onclick="removeTx('${t.id}')">🗑️</button>
+                </div>
+            </div>
+        `;
         recentBox.appendChild(div);
     });
     renderUpcoming();
@@ -397,16 +417,27 @@ function renderUpcoming() {
               el.innerHTML = `<div class="notice">Sem vencimentos próximos</div>`;
             return;
         }
-        el.innerHTML = localList.map(it => {
-            const d = it.due;
-            const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-            const daysText = it.days > 0 ? `${it.days} dias` : (it.days === 0 ? 'hoje' : `${Math.abs(it.days)} dias atras`);
-            const urgent = it.days <= 3 ? 'urgent' : '';
-            const icon = categoryIcon(it.category);
-            // show per-installment amount and remaining total to pay (if > 0)
-            const remainingHtml = it.remainingTotal && it.remainingTotal > 0 ? ` — <strong>Falta pagar: R$ ${formatMoney(it.remainingTotal)}</strong>` : '';
-            return `<div class="notice ${urgent}">${icon}<div class="notice-body"><strong>${it.desc}</strong> — R$ ${formatMoney(it.amount)}${remainingHtml} — vence ${label} (${daysText})</div></div>`;
-        }).join('');
+                el.innerHTML = localList.map(it => {
+                        const d = it.due;
+                        const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+                        const daysText = it.days > 0 ? `${it.days} dias` : (it.days === 0 ? 'hoje' : `${Math.abs(it.days)} dias atras`);
+                        const urgent = it.days <= 3 ? 'urgent' : '';
+                        const icon = categoryIcon(it.category);
+                        // show per-installment amount and remaining total to pay (if > 0)
+                        const remainingHtml = it.remainingTotal && it.remainingTotal > 0 ? `<div class="meta">Falta pagar: <strong>R$ ${formatMoney(it.remainingTotal)}</strong></div>` : '';
+                        // stacked layout: title, amount, due line
+                        return `
+                            <div class="notice ${urgent}">
+                                ${icon}
+                                <div class="notice-body">
+                                    <div class="notice-title"><strong>${it.desc}</strong></div>
+                                    <div class="meta">Valor: R$ ${formatMoney(it.amount)}</div>
+                                    ${remainingHtml}
+                                    <div class="meta">Vence: ${label} (${daysText})</div>
+                                </div>
+                            </div>
+                        `;
+                }).join('');
     }
     // First render immediately using client clock so UI is responsive
     renderWithToday(new Date());
@@ -432,25 +463,44 @@ function renderAllTransactions() {
         box.innerHTML = '<div class="empty">Nenhuma transação registrada</div>';
         return;
     }
-    txs.slice().reverse().forEach(t => {
-        const row = document.createElement('div');
-        row.className = 'tx';
-        row.innerHTML = `
-      <div>
-        <div class="cat-inline">${categoryIcon(t.category)} <strong class="cat-name">${t.category || '—'}</strong></div>
-        <strong>${t.desc}</strong>
-        <div class="meta">${t.date}</div>
-      </div>
-      <div style="text-align:right">
-        <div style="color:${t.type === 'expense' ? 'var(--danger)' : 'var(--accent)'}">R$ ${formatMoney(t.value)}</div>
-        <div class="tx-actions">
-          <button class="btn" title="Editar" onclick="editTx('${t.id}')">✏️</button>
-          <button class="btn" title="Remover" onclick="removeTx('${t.id}')">🗑️</button>
-        </div>
-      </div>
-    `;
-        box.appendChild(row);
-    });
+        txs.slice().reverse().forEach(t => {
+                const row = document.createElement('div');
+                row.className = 'tx';
+                // build installment block if needed
+                let instBlock = '';
+                if (t.installmentsTotal && Number(t.installmentsTotal) > 1) {
+                        const paid = Number(t.installmentsPaid || 0);
+                        const total = Number(t.installmentsTotal || 0);
+                        const left = Math.max(0, total - paid);
+                        const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / total));
+                        const remaining = per * left;
+                        const current = left > 0 ? (paid + 1) : total;
+                        instBlock = `
+                                <div class="meta">Parcelas: ${current}/${total}</div>
+                                <div class="meta">Pagas: ${paid}</div>
+                                <div class="meta">Faltam: ${left}</div>
+                                <div class="meta">Total a pagar: R$ ${formatMoney(remaining)}</div>
+                        `;
+                }
+                const dueLabel = t.dueDate ? (() => { const p = (t.dueDate || '').split('-'); if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`; return t.dueDate; })() : '';
+                const vencLine = dueLabel ? `<div class="meta">Venc.: ${dueLabel}</div>` : `<div class="meta">Venc.: —</div>`;
+                row.innerHTML = `
+            <div>
+                <div class="cat-inline">${categoryIcon(t.category)} <strong class="cat-name">${t.category || '—'}</strong></div>
+                <strong>${t.desc}</strong>
+                ${vencLine}
+                ${instBlock || `<div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>`}
+            </div>
+            <div style="text-align:right">
+                <div style="color:${t.type === 'expense' ? 'var(--danger)' : 'var(--accent)'}">R$ ${formatMoney(t.value)}</div>
+                <div class="tx-actions">
+                    <button class="btn" title="Editar" onclick="editTx('${t.id}')">✏️</button>
+                    <button class="btn" title="Remover" onclick="removeTx('${t.id}')">🗑️</button>
+                </div>
+            </div>
+        `;
+                box.appendChild(row);
+        });
 }
 window.renderAllTransactions = renderAllTransactions;
 window.render = render;
@@ -553,7 +603,9 @@ function renderReports() {
             const legendCats = document.getElementById('report-legend-cats');
             if (legendCats) {
                 let html = '';
-                categories.forEach((c, i) => html += `<div style="display:inline-block;margin:6px 8px;vertical-align:middle"><span class="legend-dot" style="background:${palette[i % palette.length]}"></span>${c}: R$ ${formatMoney(totalsPerCat[c] || 0)}</div>`);
+                categories.forEach((c, i) => {
+                    html += `<div class="legend-item"><span class="legend-dot" style="background:${palette[i % palette.length]}"></span>${c}: R$ ${formatMoney(totalsPerCat[c] || 0)}</div>`;
+                });
                 legendCats.innerHTML = html;
             }
         }
