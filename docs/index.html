@@ -396,9 +396,14 @@
             let installmentInfo = '';
             if(t.installmentsTotal && t.installmentsTotal>1){
               const paid = t.installmentsPaid || 0;
-              const per = t.perInstallment || (t.value / t.installmentsTotal);
               const left = Math.max(0, (t.installmentsTotal||0) - paid);
-              installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas: ${left} faltam: R$ ${formatMoney(per)}</div>`;
+              // per can be null (user left field empty) — only compute amount when provided
+              const per = (t.perInstallment === null || t.perInstallment === undefined) ? null : (t.perInstallment || (t.value / t.installmentsTotal));
+              if(per === null){
+                installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas: ${left} faltam:</div>`;
+              } else {
+                installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas: ${left} faltam: R$ ${formatMoney(per * left)}</div>`;
+              }
             }
             const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
             div.innerHTML = `
@@ -524,9 +529,13 @@
             let installmentInfo = '';
             if(t.installmentsTotal && t.installmentsTotal>1){
               const paid = t.installmentsPaid || 0;
-              const per = t.perInstallment || (t.value / t.installmentsTotal);
               const left = Math.max(0, (t.installmentsTotal||0) - paid);
-              installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas — ${left} faltam — R$ ${formatMoney(per)}</div>`;
+              const per = (t.perInstallment === null || t.perInstallment === undefined) ? null : (t.perInstallment || (t.value / t.installmentsTotal));
+              if(per === null){
+                installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas — ${left} faltam</div>`;
+              } else {
+                installmentInfo = `<div class="meta">Parcela: ${paid}/${t.installmentsTotal} pagas — ${left} faltam — R$ ${formatMoney(per * left)}</div>`;
+              }
             }
             const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
             row.innerHTML = `
@@ -571,9 +580,11 @@
           let upcomingFound = 0;
           const localList = [];
           txs.forEach(function(t){
-            // Include any transaction that has an explicit due date so incomes
-            // or other entries with a dueDate will appear in upcoming notices.
-            if(!t._dueDateExplicit && !t.dueDate) return;
+            // Only include expenses where the user explicitly set a due date.
+            // We do not show incomes or other transaction types even if they
+            // have a dueDate set by the user.
+            if (t.type !== 'expense') return;
+            if (!t._dueDateExplicit || !t.dueDate) return;
             const startDt = getStartDate(t);
             const totalInst = t.installmentsTotal && t.installmentsTotal>1 ? t.installmentsTotal : 1;
             const per = t.perInstallment || (t.value / totalInst);

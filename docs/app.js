@@ -146,9 +146,10 @@ function load() {
         const hadDue = Object.prototype.hasOwnProperty.call(orig, 'dueDate') && !!orig.dueDate;
         const t = { ...orig };
         t.category = categorize(t.desc || '', t.type);
-        t.installmentsTotal = t.installmentsTotal || undefined;
-        t.installmentsPaid = t.installmentsPaid || 0;
-        t.perInstallment = t.perInstallment || undefined;
+    t.installmentsTotal = t.installmentsTotal || undefined;
+    t.installmentsPaid = t.installmentsPaid || 0;
+    // preserve null explicitly if present; otherwise keep value or undefined
+    t.perInstallment = Object.prototype.hasOwnProperty.call(orig, 'perInstallment') ? orig.perInstallment : undefined;
         // only preserve dueDate when it was actually present in storage (explicit)
         t.dueDate = hadDue ? orig.dueDate : undefined;
         t._dueDateExplicit = orig._dueDateExplicit === true || hadDue;
@@ -368,10 +369,10 @@ function renderUpcoming() {
         let upcomingFound = 0;
         const localList = [];
         txs.forEach(t => {
-            // Include any transaction that has an explicit due date. This
-            // ensures incomes or other entries with a dueDate are shown in
-            // the upcoming card as requested by the user.
-            if (!t._dueDateExplicit && !t.dueDate) return;
+            // Only include expenses where the user explicitly set a due date.
+            // We do not show incomes or other types even if they have a dueDate.
+            if (t.type !== 'expense') return;
+            if (!t._dueDateExplicit || !t.dueDate) return;
             const startDt = getStartDate(t);
             const totalInst = t.installmentsTotal && t.installmentsTotal > 1 ? t.installmentsTotal : 1;
             const per = t.perInstallment || (t.value / totalInst);
@@ -577,6 +578,22 @@ function openModal(type) {
         if (txDueDate)
             txDueDate.value = '';
     }
+        // Atualiza o valor total ao inserir o valor da parcela corretamente
+        if (txPerInstallment && txValue && txInstallmentsTotal && txInstallmentsPaid) {
+            txPerInstallment.addEventListener('input', function () {
+                if (txPerInstallment.value === '') {
+                    // Se o campo estiver vazio, não altera o valor
+                    return;
+                }
+                const perValue = parseFloat(txPerInstallment.value.replace(',', '.'));
+                const total = parseInt(txInstallmentsTotal.value, 10);
+                const paid = parseInt(txInstallmentsPaid.value, 10);
+                if (!isNaN(perValue) && !isNaN(total) && !isNaN(paid)) {
+                    const left = Math.max(0, total - paid);
+                    txValue.value = String(perValue * left);
+                }
+            });
+        }
 }
 function closeModal() {
     modal.classList.add('hidden');
@@ -589,7 +606,7 @@ function addTx(e) {
     const value = Number(txValue.value);
     const instTotal = Number(txInstallmentsTotal.value) || undefined;
     const instPaid = Number(txInstallmentsPaid.value) || 0;
-    const perInst = Number(txPerInstallment.value) || undefined;
+    const perInst = (txPerInstallment.value === '') ? null : Number(txPerInstallment.value);
     const due = txDueDate && txDueDate.value ? txDueDate.value : undefined;
     if (!desc || isNaN(value) || value <= 0)
         return alert('Preencha descrição e valor válido');
@@ -606,13 +623,23 @@ function addTx(e) {
             txs[idx].installmentsPaid = instPaid;
             txs[idx].perInstallment = perInst;
             txs[idx].dueDate = due;
-            txs[idx]._dueDateExplicit = !!due;
+            // Ensure expenses with a provided due date are marked explicit so
+            // they appear in the upcoming card. For non-expenses keep explicit
+            // flag false unless the user provided one.
+            if (txs[idx].type === 'expense') {
+                txs[idx]._dueDateExplicit = !!due;
+            }
+            else {
+                txs[idx]._dueDateExplicit = !!due; // keep whatever user set; safe default
+            }
         }
     }
     else {
-        const tx = { id: Math.random().toString(36).slice(2, 9), type: t, desc, value, date: new Date().toLocaleDateString(), category: categorize(desc, t), installmentsTotal: instTotal, installmentsPaid: instPaid, perInstallment: perInst, dueDate: due };
-        // mark explicit if user provided a due date
-        tx._dueDateExplicit = !!due;
+    const tx = { id: Math.random().toString(36).slice(2, 9), type: t, desc, value, date: new Date().toLocaleDateString(), category: categorize(desc, t), installmentsTotal: instTotal, installmentsPaid: instPaid, perInstallment: perInst, dueDate: due };
+        // For expenses, treat a provided due date as explicit so it shows up in
+        // the upcoming card. For other types, we still record the flag but it
+        // only affects upcoming rendering for expenses.
+        tx._dueDateExplicit = (t === 'expense') ? !!due : !!due;
         txs.push(tx);
     }
     save();
@@ -633,6 +660,21 @@ function editTx(id) {
     if (txDueDate)
         txDueDate.value = tx.dueDate ? tx.dueDate : '';
     openModal(tx.type);
+    // Aplica a lógica ao editar também
+    if (txPerInstallment && txValue && txInstallmentsTotal && txInstallmentsPaid) {
+        txPerInstallment.addEventListener('input', function () {
+            if (txPerInstallment.value === '') {
+                return;
+            }
+            const perValue = parseFloat(txPerInstallment.value.replace(',', '.'));
+            const total = parseInt(txInstallmentsTotal.value, 10);
+            const paid = parseInt(txInstallmentsPaid.value, 10);
+            if (!isNaN(perValue) && !isNaN(total) && !isNaN(paid)) {
+                const left = Math.max(0, total - paid);
+                txValue.value = String(perValue * left);
+            }
+        });
+    }
 }
 function removeTx(id) {
     txs = txs.filter(t => t.id !== id);
