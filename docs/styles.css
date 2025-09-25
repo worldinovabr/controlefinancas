@@ -198,7 +198,12 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
   padding: 10px 18px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.10);
 }
-.topbar .saldo-val{color:var(--accent);font-weight:900;font-size:20px;display:inline-block}
+<<<<<<< HEAD
+.topbar .saldo-val{color:var(--accent);font-weight:900;font-size:22px;line-height:1}
+
+@media (max-width:480px){
+  .topbar .saldo-val{font-size:18px}
+}
 .container{max-width:1100px;margin:20px auto;padding:0 32px}
 .header-row{display:flex;align-items:flex-start;gap:20px}
 .header-row{display:flex;align-items:center;gap:8px;position:relative}
