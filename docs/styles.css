@@ -198,7 +198,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
   padding: 10px 18px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.10);
 }
-<<<<<<< HEAD
+ HEAD
 .topbar .saldo-val{color:var(--accent);font-weight:900;font-size:22px;line-height:1}
 
 @media (max-width:480px){

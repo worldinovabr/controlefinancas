@@ -316,17 +316,17 @@
           try{
             var migrated = 0;
             txs = txs.map(function(t){
-              if(!t._dueDateExplicit && t.date){
-                var p = (t.date||'').split('/');
-                if(p.length===3){
-                  t.dueDate = p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
-                  t._dueDateExplicit = true;
+              if(!t._dueDateExplicit && t.date && !t.dueDate){
+                var parts = (t.date||'').split('/');
+                if(parts.length===3){
+                  t.dueDate = parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
+                  // do not set t._dueDateExplicit here
                   migrated++;
                 }
               }
               return t;
             });
-            if(migrated>0) console.info('Migrated '+migrated+' transactions: converted legacy date -> dueDate and marked explicit');
+            if(migrated>0) console.info('Migrated '+migrated+' transactions: converted legacy date -> dueDate (kept non-explicit)');
           }catch(e){console.error(e)}
   try{ localStorage.setItem(KEY, JSON.stringify(txs)) }catch(e){}
         render();
@@ -399,18 +399,28 @@
             // build multi-line meta for recent card
             let installmentInfo = '';
             // Only build installment info for expenses
-            if(t.type === 'expense' && t.installmentsTotal && t.installmentsTotal>1){
-              const paid = Number(t.installmentsPaid || 0);
-              const totalInst = Number(t.installmentsTotal || 0);
-              const left = Math.max(0, totalInst - paid);
-              const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / totalInst));
-              const parcelasLine = `${paid}/${totalInst}`;
-              installmentInfo = `
-                <div class="meta">Parcelas: ${parcelasLine}</div>
-                <div class="meta">Pagas: ${paid}</div>
-                <div class="meta">Faltam: ${left}</div>
-                <div class="meta">Total a pagar: R$ ${formatMoney(per * left)}</div>
-              `;
+            if(t.type === 'expense'){
+              const hasInst = t.installmentsTotal !== undefined && t.installmentsTotal !== null && t.installmentsTotal !== '';
+              if(!hasInst){
+                installmentInfo = `
+                  <div class="meta">Parcelas: 0/0</div>
+                  <div class="meta">Pagas: 0</div>
+                  <div class="meta">Faltam: 0</div>
+                  <div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>
+                `;
+              } else {
+                const paid = Number(t.installmentsPaid || 0);
+                const totalInst = Number(t.installmentsTotal || 0);
+                const left = Math.max(0, totalInst - paid);
+                const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / totalInst));
+                const parcelasLine = `${paid}/${totalInst}`;
+                installmentInfo = `
+                  <div class="meta">Parcelas: ${parcelasLine}</div>
+                  <div class="meta">Pagas: ${paid}</div>
+                  <div class="meta">Faltam: ${left}</div>
+                  <div class="meta">Total a pagar: R$ ${formatMoney(per * left)}</div>
+                `;
+              }
             }
       const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
       const dateLine = t.date ? `<div class="meta">Data: ${t.date}</div>` : (dueLabel ? `<div class="meta">Data: ${dueLabel}</div>` : `<div class="meta">Data: —</div>`);
