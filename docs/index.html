@@ -404,7 +404,7 @@
               const totalInst = Number(t.installmentsTotal || 0);
               const left = Math.max(0, totalInst - paid);
               const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / totalInst));
-              const parcelasLine = `${paid < totalInst ? (paid + 1) : totalInst}/${totalInst}`;
+              const parcelasLine = `${paid}/${totalInst}`;
               installmentInfo = `
                 <div class="meta">Parcelas: ${parcelasLine}</div>
                 <div class="meta">Pagas: ${paid}</div>
@@ -547,7 +547,7 @@
               const totalInst = Number(t.installmentsTotal || 0);
               const left = Math.max(0, totalInst - paid);
               const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / totalInst));
-              const parcelasLine = `${paid < totalInst ? (paid + 1) : totalInst}/${totalInst}`;
+              const parcelasLine = `${paid}/${totalInst}`;
               installmentInfo = `
                 <div class="meta">Parcelas: ${parcelasLine}</div>
                 <div class="meta">Pagas: ${paid}</div>

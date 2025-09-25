@@ -305,7 +305,7 @@ function render() {
             const left = Math.max(0, totalInst - paid);
             const remaining = per * left;
                         // Build multi-line installment info using the requested labels
-                        const parcelasLine = `${paid < totalInst ? (paid + 1) : totalInst}/${totalInst}`;
+                        const parcelasLine = `${paid}/${totalInst}`;
                         installmentInfo = `
                             <div class="meta">Parcelas: ${parcelasLine}</div>
                             <div class="meta">Pagas: ${paid}</div>
