@@ -72,16 +72,7 @@ if (installBtn) {
             hideInstallButton();
             return;
         }
-        // iOS fallback: show small tooltip with instructions
-        if (/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) && !window.matchMedia('(display-mode: standalone)').matches) {
-            const t = document.createElement('div');
-            t.className = 'install-tooltip';
-            t.innerHTML = 'Toque em <strong>Compartilhar</strong> e depois <strong>Adicionar à Tela de Início</strong> para instalar.';
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 6000);
-        }
     });
-}
 
     // In-app one-time install banner shown on first open (session-based)
     function createInstallBanner(){
@@ -132,6 +123,7 @@ if (installBtn) {
             if(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return;
             createInstallBanner();
     });
+}
 function load() {
     try {
         const raw = localStorage.getItem(KEY);
@@ -156,22 +148,23 @@ function load() {
         return t;
     });
     // One-time migration: if there are transactions with legacy `date` but not a stored dueDate,
-    // optionally convert them to ISO dueDate and mark as explicit so they show in upcoming by default.
-    // We'll perform the migration automatically (best option requested by user).
+    // convert them to ISO dueDate but do NOT mark them as 'explicit' — we only want items
+    // to appear in Upcoming when the user actually provided a due date.
     let migrated = 0;
     txs = txs.map(t => {
-        if (!t._dueDateExplicit && t.date) {
+        if (!t._dueDateExplicit && t.date && !t.dueDate) {
             const parts = (t.date || '').split('/');
             if (parts.length === 3) {
                 t.dueDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                t._dueDateExplicit = true;
+                // IMPORTANT: do not set t._dueDateExplicit here. Keep it false so Upcoming
+                // only shows items where the user explicitly entered a due date.
                 migrated++;
             }
         }
         return t;
     });
     if (migrated > 0)
-        console.info(`Migrated ${migrated} transactions: converted legacy date -> dueDate and marked explicit`);
+        console.info(`Migrated ${migrated} transactions: converted legacy date -> dueDate (kept non-explicit)`);
     try {
         save();
     }
@@ -296,25 +289,50 @@ function render() {
     let installmentInfo = '';
         let rightAmount = t.value;
     // Only build installment info for expenses; incomes should only show the date
-    if (t.type === 'expense' && t.installmentsTotal && Number(t.installmentsTotal) > 1) {
-            // normalize numeric fields (they may be stored as strings)
-            const paid = Number(t.installmentsPaid || 0);
-            const totalInst = Number(t.installmentsTotal || 0);
-            // per-installment: prefer explicit perInstallment, otherwise assume t.value is TOTAL and divide by installments
-            const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / totalInst));
-            const left = Math.max(0, totalInst - paid);
-            const remaining = per * left;
-                        // Build multi-line installment info using the requested labels
-                        const parcelasLine = `${paid}/${totalInst}`;
+    if (t.type === 'expense') {
+            const hasInst = t.installmentsTotal !== undefined && t.installmentsTotal !== null && t.installmentsTotal !== '';
+            if (!hasInst) {
+                        // user didn't provide installments: show zeros
                         installmentInfo = `
-                            <div class="meta">Parcelas: ${parcelasLine}</div>
-                            <div class="meta">Pagas: ${paid}</div>
-                            <div class="meta">Faltam: ${left}</div>
-                            <div class="meta">Total a pagar: R$ ${formatMoney(remaining)}</div>
+                            <div class="meta">Parcelas: 0/0</div>
+                            <div class="meta">Pagas: 0</div>
+                            <div class="meta">Faltam: 0</div>
+                            <div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>
                         `;
-                        // show remaining total on the right column so it's clearly visible
-                        rightAmount = left > 0 ? remaining : t.value;
-        }
+                        rightAmount = t.value;
+            }
+            else {
+                const totalInst = Number(t.installmentsTotal || 0);
+                const paid = Number(t.installmentsPaid || 0);
+                if (totalInst > 1) {
+                    // per-installment: prefer explicit perInstallment, otherwise assume t.value is TOTAL and divide by installments
+                    const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / totalInst));
+                    const left = Math.max(0, totalInst - paid);
+                    const remaining = per * left;
+                    // Build multi-line installment info using the requested labels
+                    const parcelasLine = `${paid}/${totalInst}`;
+                    installmentInfo = `
+                        <div class="meta">Parcelas: ${parcelasLine}</div>
+                        <div class="meta">Pagas: ${paid}</div>
+                        <div class="meta">Faltam: ${left}</div>
+                        <div class="meta">Total a pagar: R$ ${formatMoney(remaining)}</div>
+                    `;
+                    // show remaining total on the right column so it's clearly visible
+                    rightAmount = left > 0 ? remaining : t.value;
+                }
+                else {
+                    // single installment provided (or totalInst === 1)
+                    const paidSingle = Number(t.installmentsPaid || 0);
+                    installmentInfo = `
+                        <div class="meta">Parcelas: 1/1</div>
+                        <div class="meta">Pagas: ${paidSingle}</div>
+                        <div class="meta">Faltam: ${Math.max(0, 1 - paidSingle)}</div>
+                        <div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>
+                    `;
+                    rightAmount = t.value;
+                }
+            }
+    }
             const dueLabel = t.dueDate ? (() => { const p = t.dueDate.split('-'); if (p.length === 3)
                 return `${p[2]}/${p[1]}/${p[0]}`; return t.dueDate; })() : '';
         // Only show vencimento for expenses when user set a dueDate
@@ -400,12 +418,25 @@ function renderUpcoming() {
                 // compute remaining installments count and remaining total
                 const remainingCount = Math.max(0, totalInst - paid);
                 const remainingTotal = per * remainingCount;
+                let addedAny = false;
                 for (let k = paid; k < totalInst; k++) {
                     const instDt = new Date(startDt.getFullYear(), startDt.getMonth() + k, startDt.getDate());
                     const diff = Math.ceil((instDt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                     // only include installments that are today..31 days ahead
                     if (diff >= 0 && diff <= 31) {
                         localList.push({ id: t.id, desc: t.desc, due: instDt, days: diff, amount: per, category: t.category, remainingCount, remainingTotal });
+                        upcomingFound++;
+                        addedAny = true;
+                    }
+                }
+                // Fallback: if no installment fell into the 0..31 window but the next unpaid
+                // installment (based on startDt + paid months) is within the window, include it.
+                if (!addedAny && paid < totalInst) {
+                    const nextIdx = paid;
+                    const nextDt = new Date(startDt.getFullYear(), startDt.getMonth() + nextIdx, startDt.getDate());
+                    const nextDiff = Math.ceil((nextDt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                    if (nextDiff >= 0 && nextDiff <= 31) {
+                        localList.push({ id: t.id, desc: t.desc, due: nextDt, days: nextDiff, amount: per, category: t.category, remainingCount, remainingTotal });
                         upcomingFound++;
                     }
                 }
@@ -674,24 +705,27 @@ function addTx(e) {
             txs[idx].installmentsTotal = instTotal;
             txs[idx].installmentsPaid = instPaid;
             txs[idx].perInstallment = perInst;
-            txs[idx].dueDate = due;
-            // Ensure expenses with a provided due date are marked explicit so
-            // they appear in the upcoming card. For non-expenses keep explicit
-            // flag false unless the user provided one.
-            if (txs[idx].type === 'expense') {
-                txs[idx]._dueDateExplicit = !!due;
+            // If user cleared the due date (due is undefined/empty), remove the property
+            // and mark as non-explicit. Only keep dueDate when provided.
+            if (due) {
+                txs[idx].dueDate = due;
+                txs[idx]._dueDateExplicit = (txs[idx].type === 'expense') ? true : true;
             }
             else {
-                txs[idx]._dueDateExplicit = !!due; // keep whatever user set; safe default
+                delete txs[idx].dueDate;
+                txs[idx]._dueDateExplicit = false;
             }
         }
     }
     else {
-    const tx = { id: Math.random().toString(36).slice(2, 9), type: t, desc, value, date: new Date().toLocaleDateString(), category: categorize(desc, t), installmentsTotal: instTotal, installmentsPaid: instPaid, perInstallment: perInst, dueDate: due };
-        // For expenses, treat a provided due date as explicit so it shows up in
-        // the upcoming card. For other types, we still record the flag but it
-        // only affects upcoming rendering for expenses.
-        tx._dueDateExplicit = (t === 'expense') ? !!due : !!due;
+        const tx = { id: Math.random().toString(36).slice(2, 9), type: t, desc, value, date: new Date().toLocaleDateString(), category: categorize(desc, t), installmentsTotal: instTotal, installmentsPaid: instPaid, perInstallment: perInst };
+        if (due) {
+            tx.dueDate = due;
+            tx._dueDateExplicit = (t === 'expense') ? true : true;
+        }
+        else {
+            tx._dueDateExplicit = false;
+        }
         txs.push(tx);
     }
     save();
