@@ -4,17 +4,32 @@
 
 self.addEventListener('push', function(event) {
   try {
-    const payload = event.data ? event.data.json() : { title: 'Controle Finanças', body: 'Você tem um vencimento próximo.' };
+    // payload may be JSON or plain text; handle safely
+    let payload = { title: 'Controle Finanças', body: 'Você tem um vencimento próximo.' };
+    try {
+      if (event.data) {
+        // prefer json parse, but wrap in try
+        payload = event.data.json ? event.data.json() : JSON.parse(event.data.text());
+      }
+    } catch (pe) {
+      try { const text = event.data && event.data.text ? event.data.text() : null; if (text) payload.body = text; } catch(e){}
+    }
     const title = payload.title || 'Controle Finanças';
+    const tag = (payload.tag || 'controlefinancas-due');
     const options = {
       body: payload.body || '',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
-      data: payload.data || {}
+      // use a local icon that exists in the repo (relative to SW scope)
+      icon: 'cartao.png',
+      badge: 'cartao.png',
+      vibrate: [100, 50, 100],
+      tag: tag,
+      renotify: true,
+      actions: payload.actions || [{ action: 'view', title: 'Ver' }],
+      data: payload.data || {},
+      timestamp: Date.now()
     };
-    // show system notification
+    // show system notification and broadcast the payload to clients
     const p = self.registration.showNotification(title, options);
-    // also broadcast the payload to all open clients so the page can persist the notice
     const msg = { type: 'PUSH_PAYLOAD', payload };
     const bc = self.clients.matchAll({ includeUncontrolled: true, type: 'window' }).then(clients => {
       clients.forEach(c => {
@@ -29,13 +44,26 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
-  const url = (event.notification && event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
+  const data = event.notification && event.notification.data ? event.notification.data : {};
+  const target = data.url || ('/' );
+  // handle action buttons
+  const action = event.action || null;
   event.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+    // try to focus an existing client
     for (let i = 0; i < clientList.length; i++) {
       const client = clientList[i];
-      if (client.url === url && 'focus' in client) return client.focus();
+      // prefer clients that match our path (relative)
+      if (client.url && client.url.indexOf(location.origin) === 0) {
+        try { client.focus(); client.postMessage({ type: 'NOTIFICATION_CLICK', action, data }); } catch(e){}
+        return;
+      }
     }
-    if (clients.openWindow) return clients.openWindow(url);
+    // if none found, open a new window relative to SW scope
+    if (clients.openWindow) {
+      const scopeBase = (self.registration && self.registration.scope) ? self.registration.scope : '/';
+      const openUrl = new URL(target, scopeBase).href;
+      return clients.openWindow(openUrl);
+    }
   }));
 });
 const CACHE_NAME = 'controlefinancas-v1';

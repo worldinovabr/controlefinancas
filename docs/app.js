@@ -310,6 +310,42 @@ function ensureNotifyButton() {
                         try { new Notification('Controle Finanças', { body: `Há ${cnt} vencimento(s) nos próximos ${DUE_THRESHOLD_DAYS} dias.` }); } catch(e) {}
                         // show the in-app toast and force it visible even if it was shown before in session
                         try { showDueSoonToast(cnt, true); } catch(e) {}
+                        // criar um balão personalizado para cada vencimento próximo
+                        try {
+                            if (DUE_SOON_IDS && DUE_SOON_IDS.size > 0) {
+                                DUE_SOON_IDS.forEach(id => {
+                                    const tx = txs.find(t => t.id === id);
+                                    if (!tx) return;
+                                    const nextDue = getNextDueDate(tx);
+                                    const dataStr = nextDue ? `${nextDue.getDate().toString().padStart(2,'0')}/${(nextDue.getMonth()+1).toString().padStart(2,'0')}/${nextDue.getFullYear()}` : '';
+                                    const valorStr = formatMoney(tx.value);
+                                    const texto = `${tx.desc || 'Vencimento'} vence dia ${dataStr} Valor: R$ ${valorStr}`;
+                                    // Toast customizado
+                                    let container = document.getElementById('toast-container');
+                                    if (!container) {
+                                        container = document.createElement('div');
+                                        container.id = 'toast-container';
+                                        container.style.position = 'fixed';
+                                        container.style.right = '18px';
+                                        container.style.bottom = '18px';
+                                        container.style.zIndex = '9999';
+                                        document.body.appendChild(container);
+                                    }
+                                    const t = document.createElement('div');
+                                    t.className = 'toast due-toast';
+                                    t.setAttribute('role', 'status');
+                                    t.setAttribute('aria-live', 'polite');
+                                    t.style.background = '#111827';
+                                    t.style.color = '#fff';
+                                    t.style.padding = '12px 14px';
+                                    t.style.borderRadius = '10px';
+                                    t.style.boxShadow = '0 8px 20px rgba(2,6,23,0.4)';
+                                    t.innerHTML = `<div style="display:flex;gap:12px;align-items:center"><div>${texto}</div></div>`;
+                                    container.appendChild(t);
+                                    setTimeout(() => { try { t.remove(); } catch (e) { } }, 8000);
+                                });
+                            }
+                        } catch (e) { console.error('toast vencimento personalizado', e); }
                         // create persistent in-app notices for current due-soon items so the user sees them in the UI
                         try {
                             DUE_SOON_IDS && DUE_SOON_IDS.forEach(id => {
@@ -400,6 +436,24 @@ function render() {
             const body = `${tx.type === 'expense' ? 'Valor: R$ ' + formatMoney(tx.value) : ''}`;
             const meta = nextDue ? `Vence em: ${nextDue.getDate().toString().padStart(2,'0')}/${(nextDue.getMonth()+1).toString().padStart(2,'0')}/${nextDue.getFullYear()}` : '';
             DUE_NOTICES.push({ id: 'n_' + Math.random().toString(36).slice(2,9), txId: id, title, body, meta, created: Date.now() });
+
+            // Envia push automático para o servidor se permitido
+            if (window.Notification && Notification.permission === 'granted' && typeof fetch === 'function' && PUSH_SERVER_BASE) {
+                // Monta mensagem personalizada
+                const pushPayload = {
+                    title: tx.desc || 'Vencimento próximo',
+                    body: `${tx.desc || 'Vencimento'} vence dia ${nextDue ? `${nextDue.getDate().toString().padStart(2,'0')}/${(nextDue.getMonth()+1).toString().padStart(2,'0')}/${nextDue.getFullYear()}` : ''} Valor: R$ ${formatMoney(tx.value)}`,
+                    data: { txId: id, due: tx.dueDate, value: tx.value }
+                };
+                // Evita enviar múltiplas vezes para o mesmo vencimento
+                if (!tx._pushSent) {
+                    fetch(PUSH_SERVER_BASE + '/send-test', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ payload: pushPayload })
+                    }).then(() => { tx._pushSent = true; }).catch(()=>{});
+                }
+            }
         });
         saveNotices();
     } catch (e) { console.error(e); }

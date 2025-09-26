@@ -792,6 +792,17 @@
       }catch(e){}
     })();
   </script>
+  <script src="app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Dev helper: if you open the page with ?debug_toast=1 it will simulate an incoming push
+    try{
+      if(location.search.indexOf('debug_toast=1')!==-1 && window.simulateIncomingPush){
+        // craft a sample payload similar to push-server
+        const sample = { title: 'Teste de Vencimento', body: 'Conta Demo vence dia 30/09/2025 Valor: R$ 120,00', data: { txId: 'demo_push_1', meta: 'Demo' } };
+        setTimeout(()=>{ try{ window.simulateIncomingPush(sample); }catch(e){} }, 800);
+      }
+    }catch(e){}
+  </script>
 </body>
 </html>
