@@ -722,6 +722,61 @@
       }
 
   load();
+  // minimal inline due-soon computation and notify button for the inline script path
+  try {
+    const DUE_THRESHOLD_DAYS = 7;
+    function computeDueSoonInline(thresholdDays) {
+      const now = new Date();
+      const limit = new Date(now.getFullYear(), now.getMonth(), now.getDate() + Number(thresholdDays));
+      const set = new Set();
+      txs.forEach(function (t) {
+        try {
+          if (!t.dueDate) return;
+          const start = getStartDate(t);
+          const total = t.installmentsTotal && Number(t.installmentsTotal) > 1 ? Number(t.installmentsTotal) : 1;
+          const paid = Number(t.installmentsPaid || 0);
+          if (paid >= total) return;
+          const nextIdx = paid;
+          const nextDue = new Date(start.getFullYear(), start.getMonth() + nextIdx, start.getDate());
+          if (nextDue >= now && nextDue <= limit) set.add(t.id);
+        }
+        catch (e) { }
+      });
+      return set;
+    }
+    function ensureNotifyButtonInline() {
+      try {
+        var btn = document.getElementById('notify-btn');
+        if (!btn) {
+          var header = document.querySelector('.topbar');
+          if (!header) return;
+          btn = document.createElement('button');
+          btn.id = 'notify-btn';
+          btn.className = 'btn';
+          btn.style.marginLeft = '8px';
+          btn.textContent = 'Ativar notificações';
+          btn.addEventListener('click', function () {
+            if (!('Notification' in window)) return alert('Notificações não são suportadas neste navegador');
+            try {
+              Notification.requestPermission().then(function (perm) {
+                if (perm === 'granted') {
+                  var cnt = computeDueSoonInline(DUE_THRESHOLD_DAYS).size;
+                  try { new Notification('Controle Finanças', { body: 'Há ' + cnt + ' vencimento(s) nos próximos ' + DUE_THRESHOLD_DAYS + ' dias.' }); } catch (e) { }
+                }
+                else if (perm === 'denied') {
+                  alert('Permissão negada para notificações');
+                }
+              });
+            }
+            catch (e) { console.error(e); }
+          });
+          header.appendChild(btn);
+        }
+      }
+      catch (e) { }
+    }
+    try { ensureNotifyButtonInline(); } catch (e) { }
+  } catch (e) { }
   // Ensure upcoming notices and the on-page diagnostic are shown without
   // requiring the user to open DevTools. Also update the global render to
   // include upcoming and diagnostics so manual calls reflect both areas.
