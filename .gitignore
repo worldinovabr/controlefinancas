@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+# VAPID keys should remain private
+tools/push-server/vapid.json
+.vscode/
+*.log
