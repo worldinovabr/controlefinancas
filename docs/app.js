@@ -736,3 +736,85 @@ try{
 load();
 // ensure notify button is created after initial load
 try { ensureNotifyButton(); } catch (e) { }
+
+// --- Service Worker + Push helpers (client) ---
+// Minimal client-side hooks to register a service worker and subscribe to push.
+async function registerServiceWorkerAndSubscribe() {
+    if (!('serviceWorker' in navigator)) return { error: 'no-sw' };
+    try {
+        const reg = await navigator.serviceWorker.register('/docs/sw.js');
+        console.info('Service worker registered', reg);
+        return { registration: reg };
+    }
+    catch (e) {
+        console.error('SW registration failed', e);
+        return { error: e };
+    }
+}
+
+// Helper to urlBase64ToUint8Array (VAPID pubkey decode)
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+async function subscribeToPush(publicVapidKey) {
+    try {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        });
+        return sub;
+    }
+    catch (e) {
+        console.error('subscribeToPush failed', e);
+        throw e;
+    }
+}
+
+// Send subscription object to server (POST /subscribe)
+async function sendSubscriptionToServer(subscription) {
+    try {
+        // Update this URL to your server endpoint when available
+        const res = await fetch('/tools/push-server/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription }) });
+        return res;
+    }
+    catch (e) { console.error(e); }
+}
+
+// Expose small helper used by the notify button to register and subscribe
+async function activatePushFlow() {
+    try {
+        if (!('Notification' in window)) return alert('Notificações não são suportadas neste navegador');
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') return alert('Permissão de notificações necessária');
+        // register SW
+        await registerServiceWorkerAndSubscribe();
+        // fetch public key from server path (this is optional; demo uses a placeholder)
+        let publicKey = null;
+        try {
+            const r = await fetch('/tools/push-server/vapidPublicKey');
+            if (r && r.ok) publicKey = (await r.text()).trim();
+        }
+        catch (e) { console.warn('No VAPID public key endpoint available, skipped'); }
+        if (!publicKey) {
+            // fallback to prompt user to paste a public key or skip subscription
+            console.info('No public VAPID key available; push subscription skipped (server required).');
+            return;
+        }
+        const sub = await subscribeToPush(publicKey);
+        await sendSubscriptionToServer(sub);
+        alert('Inscrição para push realizada com sucesso (servidor pode enviar notificações).');
+    }
+    catch (e) { console.error(e); alert('Falha ao ativar push: '+(e && e.message)); }
+}
+
+// allow global call from UI
+window.activatePushFlow = activatePushFlow;

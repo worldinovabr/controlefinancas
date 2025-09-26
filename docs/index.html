@@ -756,6 +756,8 @@
           btn.style.marginLeft = '8px';
           btn.textContent = 'Ativar notificações';
           btn.addEventListener('click', function () {
+            // prefer the richer push activation flow if available
+            if (typeof activatePushFlow === 'function') return activatePushFlow();
             if (!('Notification' in window)) return alert('Notificações não são suportadas neste navegador');
             try {
               Notification.requestPermission().then(function (perm) {
