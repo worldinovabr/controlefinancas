@@ -12,7 +12,16 @@ self.addEventListener('push', function(event) {
       badge: '/icons/icon-192.png',
       data: payload.data || {}
     };
-    event.waitUntil(self.registration.showNotification(title, options));
+    // show system notification
+    const p = self.registration.showNotification(title, options);
+    // also broadcast the payload to all open clients so the page can persist the notice
+    const msg = { type: 'PUSH_PAYLOAD', payload };
+    const bc = self.clients.matchAll({ includeUncontrolled: true, type: 'window' }).then(clients => {
+      clients.forEach(c => {
+        try { c.postMessage(msg); } catch (err) { /* ignore */ }
+      });
+    }).catch(() => {});
+    event.waitUntil(Promise.all([p, bc]));
   } catch (e) {
     console.error('SW push handler error', e);
   }

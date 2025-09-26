@@ -2,6 +2,9 @@
 const KEY = 'simple_dashboard_tx';
 // number of days ahead to consider "due soon"
 const DUE_THRESHOLD_DAYS = 7;
+// Push server base: auto-detect localhost during development, leave empty for production
+// IMPORTANT: set this to your deployed push server URL (https) when you host the server.
+const PUSH_SERVER_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:4000' : '';
 // set of ids computed each render
 let DUE_SOON_IDS = new Set();
 // persistent notices key
@@ -303,7 +306,27 @@ function ensureNotifyButton() {
                     const perm = await Notification.requestPermission();
                     if (perm === 'granted') {
                         const cnt = (DUE_SOON_IDS && DUE_SOON_IDS.size) ? DUE_SOON_IDS.size : 0;
-                        new Notification('Controle Finanças', { body: `Há ${cnt} vencimento(s) nos próximos ${DUE_THRESHOLD_DAYS} dias.` });
+                        // show a system notification (what you saw)
+                        try { new Notification('Controle Finanças', { body: `Há ${cnt} vencimento(s) nos próximos ${DUE_THRESHOLD_DAYS} dias.` }); } catch(e) {}
+                        // show the in-app toast and force it visible even if it was shown before in session
+                        try { showDueSoonToast(cnt, true); } catch(e) {}
+                        // create persistent in-app notices for current due-soon items so the user sees them in the UI
+                        try {
+                            DUE_SOON_IDS && DUE_SOON_IDS.forEach(id => {
+                                if (DUE_NOTICES.find(n => n.txId === id)) return;
+                                const tx = txs.find(t => t.id === id);
+                                if (!tx) return;
+                                const nextDue = getNextDueDate(tx);
+                                const title = tx.desc || 'Vencimento';
+                                const body = tx.type === 'expense' ? 'Valor: R$ ' + formatMoney(tx.value) : '';
+                                const meta = nextDue ? `Vence em: ${nextDue.getDate().toString().padStart(2,'0')}/${(nextDue.getMonth()+1).toString().padStart(2,'0')}/${nextDue.getFullYear()}` : '';
+                                DUE_NOTICES.push({ id: 'n_' + Math.random().toString(36).slice(2,9), txId: id, title, body, meta, created: Date.now() });
+                            });
+                            saveNotices();
+                            try { renderNotices(); } catch(e) {}
+                        } catch (e) { console.error('failed to create persistent notices', e); }
+                        // attempt to register service worker to enable push subscriptions (best-effort)
+                        try { registerServiceWorkerAndSubscribe().catch(()=>{}); } catch (e) { }
                     }
                     else if (perm === 'denied') {
                         alert('Permissão negada para notificações');
@@ -318,7 +341,7 @@ function ensureNotifyButton() {
 }
 
 // Show a one-time-per-session toast informing about due-soon items
-function showDueSoonToast(count) {
+function showDueSoonToast(count, force = false) {
     try {
         let container = document.getElementById('toast-container');
         if (!container) {
@@ -330,6 +353,8 @@ function showDueSoonToast(count) {
             container.style.zIndex = '9999';
             document.body.appendChild(container);
         }
+        // if we've already shown this toast this session, skip unless forced
+        if (!force && sessionStorage.getItem('shownDueSoonToast')) return;
         const t = document.createElement('div');
         t.className = 'toast due-toast';
         t.setAttribute('role', 'status');
@@ -345,6 +370,8 @@ function showDueSoonToast(count) {
         if (btn) btn.addEventListener('click', (e) => { navTo('transactions'); try { t.remove(); } catch (e) { } });
         // auto dismiss after 8s
         setTimeout(() => { try { t.remove(); } catch (e) { } }, 8000);
+        // mark as shown (unless forced without wanting to persist)
+        try { sessionStorage.setItem('shownDueSoonToast','1'); } catch(e){}
     }
     catch (e) { }
 }
@@ -828,7 +855,9 @@ try { ensureNotifyButton(); } catch (e) { }
 async function registerServiceWorkerAndSubscribe() {
     if (!('serviceWorker' in navigator)) return { error: 'no-sw' };
     try {
-        const reg = await navigator.serviceWorker.register('/docs/sw.js');
+        // register using a relative path so the service worker scope works on GitHub Pages
+        // (e.g. https://username.github.io/repo/). Using a leading slash would point to the site root.
+        const reg = await navigator.serviceWorker.register('docs/sw.js');
         console.info('Service worker registered', reg);
         return { registration: reg };
     }
@@ -868,8 +897,9 @@ async function subscribeToPush(publicVapidKey) {
 // Send subscription object to server (POST /subscribe)
 async function sendSubscriptionToServer(subscription) {
     try {
-        // Update this URL to your server endpoint when available
-        const res = await fetch('/tools/push-server/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription }) });
+        // send subscription to demo push server (development)
+        const url = PUSH_SERVER_BASE + '/subscribe';
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription }) });
         return res;
     }
     catch (e) { console.error(e); }
@@ -886,7 +916,7 @@ async function activatePushFlow() {
         // fetch public key from server path (this is optional; demo uses a placeholder)
         let publicKey = null;
         try {
-            const r = await fetch('/tools/push-server/vapidPublicKey');
+            const r = await fetch(PUSH_SERVER_BASE + '/vapidPublicKey');
             if (r && r.ok) publicKey = (await r.text()).trim();
         }
         catch (e) { console.warn('No VAPID public key endpoint available, skipped'); }
@@ -904,3 +934,44 @@ async function activatePushFlow() {
 
 // allow global call from UI
 window.activatePushFlow = activatePushFlow;
+
+// Listen for messages from service worker (incoming push payloads)
+if ('serviceWorker' in navigator) {
+    try {
+        navigator.serviceWorker.addEventListener('message', function (ev) {
+            try {
+                const data = ev && ev.data;
+                if (!data || data.type !== 'PUSH_PAYLOAD') return;
+                const payload = data.payload || {};
+                // Build a notice from payload: prefer explicit fields
+                const title = payload.title || 'Vencimento próximo';
+                const body = payload.body || (payload.message || '') || '';
+                const meta = (payload.data && payload.data.meta) ? payload.data.meta : (payload.data && payload.data.txId ? 'Transação: ' + payload.data.txId : '');
+                // avoid duplicates by txId if provided
+                const txId = payload.data && payload.data.txId ? payload.data.txId : null;
+                if (txId && DUE_NOTICES.find(n => n.txId === txId)) return;
+                const notice = { id: 'n_' + Math.random().toString(36).slice(2,9), txId: txId, title, body, meta, created: Date.now() };
+                DUE_NOTICES.push(notice);
+                saveNotices();
+                try { renderNotices(); } catch (e) { }
+            }
+            catch (e) { console.error('SW message handler error', e); }
+        });
+    }
+    catch (e) { }
+}
+
+// Test helper: simulate an incoming push payload (for dev/testing from console)
+function simulateIncomingPush(payload) {
+    try {
+        const ev = { data: { type: 'PUSH_PAYLOAD', payload } };
+        // reuse same handling path
+        navigator.serviceWorker && navigator.serviceWorker.dispatchEvent && navigator.serviceWorker.dispatchEvent(new MessageEvent('message', { data: ev.data }));
+        // Also call handler directly if no SW available
+        if (!navigator.serviceWorker || !navigator.serviceWorker.dispatchEvent) {
+            const handler = function(evLocal) { /* noop */ };
+        }
+    }
+    catch (e) { console.warn('simulateIncomingPush failed', e); }
+}
+window.simulateIncomingPush = simulateIncomingPush;
