@@ -4,6 +4,9 @@ const KEY = 'simple_dashboard_tx';
 const DUE_THRESHOLD_DAYS = 7;
 // set of ids computed each render
 let DUE_SOON_IDS = new Set();
+// persistent notices key
+const NOTICES_KEY = 'cn_due_notices';
+let DUE_NOTICES = loadNotices();
 function $(s) { return document.querySelector(s); }
 const recentBox = $('#recent-box');
 const saldoEl = $('#saldo');
@@ -186,6 +189,73 @@ function computeDueSoon(thresholdDays) {
     return set;
 }
 
+function getNextDueDate(t) {
+    try {
+        if (!t.dueDate) return null;
+        const start = getStartDate(t);
+        const total = t.installmentsTotal && Number(t.installmentsTotal) > 1 ? Number(t.installmentsTotal) : 1;
+        const paid = Number(t.installmentsPaid || 0);
+        if (paid >= total) return null;
+        const nextIdx = paid;
+        return new Date(start.getFullYear(), start.getMonth() + nextIdx, start.getDate());
+    }
+    catch (e) { return null; }
+}
+
+function loadNotices() {
+    try {
+        const raw = localStorage.getItem(NOTICES_KEY);
+        return raw ? JSON.parse(raw) : [];
+    }
+    catch (e) { return []; }
+}
+
+function saveNotices() {
+    try { localStorage.setItem(NOTICES_KEY, JSON.stringify(DUE_NOTICES)); }
+    catch (e) { }
+}
+
+function renderNotices() {
+    try {
+        let container = document.getElementById('due-notices');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'due-notices';
+            container.setAttribute('aria-live', 'polite');
+            // place below header
+            const header = document.querySelector('.topbar');
+            if (header && header.parentNode) header.parentNode.insertBefore(container, header.nextSibling);
+            else document.body.insertBefore(container, document.body.firstChild);
+        }
+        container.innerHTML = '';
+        if (!DUE_NOTICES || DUE_NOTICES.length === 0) return;
+        DUE_NOTICES.slice().reverse().forEach(n => {
+            const el = document.createElement('div');
+            el.className = 'due-notice';
+            const title = n.title || 'Vencimento próximo';
+            const body = n.body || '';
+            const meta = n.meta || '';
+            el.innerHTML = `
+                <div class="notice-body"><strong>${escapeHtml(title)}</strong><div class="notice-meta">${escapeHtml(body)}</div><div class="notice-meta small muted">${escapeHtml(meta)}</div></div>
+                <div class="notice-actions"><button class="btn" data-id="${n.id}" aria-label="Remover">✕</button></div>
+            `;
+            const btn = el.querySelector('button[data-id]');
+            if (btn) btn.addEventListener('click', function (e) { dismissNotice(this.getAttribute('data-id')); });
+            container.appendChild(el);
+        });
+    }
+    catch (e) { console.error(e); }
+}
+
+function dismissNotice(id) {
+    const idx = DUE_NOTICES.findIndex(x => x.id === id);
+    if (idx !== -1) DUE_NOTICES.splice(idx, 1);
+    saveNotices();
+    try { renderNotices(); } catch (e) { }
+}
+
+function escapeHtml(s) { return String(s || '').replace(/[&<>"]+/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+
 // Update or create a small badge in the header showing number of due-soon items
 function updateDueBadge(count) {
     let el = document.getElementById('due-badge');
@@ -291,6 +361,22 @@ function render() {
     DUE_SOON_IDS = computeDueSoon(DUE_THRESHOLD_DAYS);
     try { updateDueBadge(DUE_SOON_IDS.size); } catch (e) { }
     try { if (!sessionStorage.getItem('shownDueSoonToast') && DUE_SOON_IDS.size > 0) { showDueSoonToast(DUE_SOON_IDS.size); sessionStorage.setItem('shownDueSoonToast','1'); } } catch (e) { }
+    // Create persistent in-app notices for due-soon transactions
+    try {
+        DUE_SOON_IDS.forEach(id => {
+            // if we already have a notice for this id, skip
+            if (DUE_NOTICES.find(n => n.txId === id)) return;
+            const tx = txs.find(t => t.id === id);
+            if (!tx) return;
+            const nextDue = getNextDueDate(tx);
+            const title = tx.desc || 'Vencimento';
+            const body = `${tx.type === 'expense' ? 'Valor: R$ ' + formatMoney(tx.value) : ''}`;
+            const meta = nextDue ? `Vence em: ${nextDue.getDate().toString().padStart(2,'0')}/${(nextDue.getMonth()+1).toString().padStart(2,'0')}/${nextDue.getFullYear()}` : '';
+            DUE_NOTICES.push({ id: 'n_' + Math.random().toString(36).slice(2,9), txId: id, title, body, meta, created: Date.now() });
+        });
+        saveNotices();
+    } catch (e) { console.error(e); }
+    try { renderNotices(); } catch (e) { }
     saldoEl.textContent = formatMoney(saldo);
     cardSaldo.textContent = `R$ ${formatMoney(saldo)}`;
     cardRenda.textContent = `R$ ${formatMoney(income)}`;

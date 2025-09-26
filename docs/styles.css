@@ -936,4 +936,13 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
   /* subtle scrollbar hiding for WebKit-based browsers */
   .topbar .nav::-webkit-scrollbar, .controls-center::-webkit-scrollbar{height:8px}
   .topbar .nav::-webkit-scrollbar-thumb, .controls-center::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.08);border-radius:6px}
+
+/* Persistent due notices container */
+#due-notices { position: relative; max-width: 980px; margin: 10px auto; padding: 0 12px; z-index: 800; }
+.due-notice { display:flex; justify-content:space-between; align-items:center; background:#fff7ed; border-left:4px solid #fb923c; padding:10px 12px; margin-bottom:8px; border-radius:8px; box-shadow:0 6px 18px rgba(15,23,42,0.05); }
+.due-notice .notice-body { flex:1; }
+.due-notice .notice-meta { font-size:13px; color:#374151; }
+.due-notice .notice-meta.small.muted { color:#6b7280; font-size:12px; }
+.due-notice .notice-actions { margin-left:8px; }
+
 }
