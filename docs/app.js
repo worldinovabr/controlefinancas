@@ -1,5 +1,9 @@
 "use strict";
 const KEY = 'simple_dashboard_tx';
+// number of days ahead to consider "due soon"
+const DUE_THRESHOLD_DAYS = 7;
+// set of ids computed each render
+let DUE_SOON_IDS = new Set();
 function $(s) { return document.querySelector(s); }
 const recentBox = $('#recent-box');
 const saldoEl = $('#saldo');
@@ -42,113 +46,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
     showInstallButton();
 });
 // If app is already installed, hide the button
-window.addEventListener('appinstalled', () => {
-    deferredPrompt = null;
-    hideInstallButton();
-});
-
-// Register service worker for offline support and to meet PWA requirements
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(reg => {
-            console.log('Service worker registered:', reg.scope);
-        }).catch(err => console.warn('Service worker registration failed:', err));
-    });
-}
-// Click handler for our install button
-if (installBtn) {
-    installBtn.addEventListener('click', async () => {
-        // If we have a deferred prompt (Chrome, Edge, Android), show it
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const choiceResult = await deferredPrompt.userChoice;
-            if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the A2HS prompt');
-            }
-            else {
-                console.log('User dismissed the A2HS prompt');
-            }
-            deferredPrompt = null;
-            hideInstallButton();
-            return;
-        }
-    });
-
-    // In-app one-time install banner shown on first open (session-based)
-    function createInstallBanner(){
-            if(sessionStorage.getItem('install_banner_shown')) return null;
-            const b = document.createElement('div');
-            b.className = 'install-banner';
-            b.innerHTML = `
-                <div class="install-banner-inner">
-                    <div class="install-banner-text">Deseja instalar o app Controle Financeiro para acessar rapidamente?</div>
-                    <div class="install-banner-actions">
-                        <button class="btn small btn-install-now">Instalar</button>
-                        <button class="btn small btn-install-dismiss">Fechar</button>
-                    </div>
-                </div>`;
-            document.body.appendChild(b);
-            // mark shown for this session
-            sessionStorage.setItem('install_banner_shown', '1');
-            // wiring
-            b.querySelector('.btn-install-dismiss').addEventListener('click', ()=> b.remove());
-            b.querySelector('.btn-install-now').addEventListener('click', async ()=>{
-                    // prefer deferredPrompt if available
-                    if(deferredPrompt){
-                            deferredPrompt.prompt();
-                            const choice = await deferredPrompt.userChoice;
-                            deferredPrompt = null;
-                            b.remove();
-                            hideInstallButton();
-                            return;
-                    }
-                    // iOS fallback
-                    if(/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) && !window.matchMedia('(display-mode: standalone)').matches){
-                            const t = document.createElement('div');
-                            t.className = 'install-tooltip';
-                            t.innerHTML = 'Toque em <strong>Compartilhar</strong> e depois <strong>Adicionar à Tela de Início</strong>.';
-                            document.body.appendChild(t);
-                            setTimeout(()=>t.remove(),6000);
-                            return;
-                    }
-                    // fallback: show the header install button as a hint
-                    showInstallButton();
-            });
-            return b;
-    }
-
-    // show banner on load (if not installed and not already shown this session)
-    window.addEventListener('load', ()=>{
-            // do not show if already installed / display-mode is standalone
-            if(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return;
-            createInstallBanner();
-    });
-}
+// renderUpcoming removed
 function load() {
-    try {
-        const raw = localStorage.getItem(KEY);
-        txs = raw ? JSON.parse(raw) : [];
-    }
-    catch (e) {
-        txs = [];
-    }
-    // reclassify all existing transactions using current rules (overwrite previous categories)
-    txs = txs.map(orig => {
-        // determine if stored object actually had a dueDate (user explicitly set it)
-        const hadDue = Object.prototype.hasOwnProperty.call(orig, 'dueDate') && !!orig.dueDate;
-        const t = { ...orig };
-        t.category = categorize(t.desc || '', t.type);
-    t.installmentsTotal = t.installmentsTotal || undefined;
-    t.installmentsPaid = t.installmentsPaid || 0;
-    // preserve null explicitly if present; otherwise keep value or undefined
-    t.perInstallment = Object.prototype.hasOwnProperty.call(orig, 'perInstallment') ? orig.perInstallment : undefined;
-        // only preserve dueDate when it was actually present in storage (explicit)
-        t.dueDate = hadDue ? orig.dueDate : undefined;
-        t._dueDateExplicit = orig._dueDateExplicit === true || hadDue;
-        return t;
-    });
-    // One-time migration: if there are transactions with legacy `date` but not a stored dueDate,
-    // convert them to ISO dueDate but do NOT mark them as 'explicit' — we only want items
     // to appear in Upcoming when the user actually provided a due date.
     let migrated = 0;
     txs = txs.map(t => {
@@ -265,6 +164,120 @@ function save() {
 function formatMoney(v) {
     return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+// Compute set of tx.ids whose next unpaid installment falls within `thresholdDays` from today
+function computeDueSoon(thresholdDays) {
+    const now = new Date();
+    const limit = new Date(now.getFullYear(), now.getMonth(), now.getDate() + Number(thresholdDays));
+    const set = new Set();
+    txs.forEach(t => {
+        try {
+            if (!t.dueDate) return; // only consider explicit dueDate in MVP
+            const start = getStartDate(t);
+            const total = t.installmentsTotal && Number(t.installmentsTotal) > 1 ? Number(t.installmentsTotal) : 1;
+            const paid = Number(t.installmentsPaid || 0);
+            if (paid >= total) return;
+            const nextIdx = paid; // 0-based index for next unpaid
+            const nextDue = new Date(start.getFullYear(), start.getMonth() + nextIdx, start.getDate());
+            if (nextDue >= now && nextDue <= limit) set.add(t.id);
+        }
+        catch (e) { }
+    });
+    return set;
+}
+
+// Update or create a small badge in the header showing number of due-soon items
+function updateDueBadge(count) {
+    let el = document.getElementById('due-badge');
+    if (!el) {
+        // create badge placeholder in header
+        const header = document.querySelector('.topbar');
+        if (!header) return;
+        el = document.createElement('div');
+        el.id = 'due-badge';
+        el.className = 'due-badge';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        el.style.marginLeft = '12px';
+        // simple inner
+        el.innerHTML = `<span class="label">Vencimentos</span> <span class="count"></span>`;
+        header.appendChild(el);
+    }
+    const countEl = el.querySelector('.count');
+    if (!countEl) return;
+    if (!count || count <= 0) {
+        el.style.display = 'none';
+    }
+    else {
+        el.style.display = 'inline-flex';
+        countEl.textContent = String(count);
+        el.setAttribute('aria-label', `${count} vencimentos próximos`);
+    }
+}
+
+// Add a small header control to request Notification permission and show a sample notification
+function ensureNotifyButton() {
+    try {
+        let btn = document.getElementById('notify-btn');
+        if (!btn) {
+            const header = document.querySelector('.topbar');
+            if (!header) return;
+            btn = document.createElement('button');
+            btn.id = 'notify-btn';
+            btn.className = 'btn';
+            btn.style.marginLeft = '8px';
+            btn.textContent = 'Ativar notificações';
+            btn.addEventListener('click', async () => {
+                if (!('Notification' in window)) return alert('Notificações não são suportadas neste navegador');
+                try {
+                    const perm = await Notification.requestPermission();
+                    if (perm === 'granted') {
+                        const cnt = (DUE_SOON_IDS && DUE_SOON_IDS.size) ? DUE_SOON_IDS.size : 0;
+                        new Notification('Controle Finanças', { body: `Há ${cnt} vencimento(s) nos próximos ${DUE_THRESHOLD_DAYS} dias.` });
+                    }
+                    else if (perm === 'denied') {
+                        alert('Permissão negada para notificações');
+                    }
+                }
+                catch (e) { console.error(e); }
+            });
+            header.appendChild(btn);
+        }
+    }
+    catch (e) { }
+}
+
+// Show a one-time-per-session toast informing about due-soon items
+function showDueSoonToast(count) {
+    try {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.position = 'fixed';
+            container.style.right = '18px';
+            container.style.bottom = '18px';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+        }
+        const t = document.createElement('div');
+        t.className = 'toast due-toast';
+        t.setAttribute('role', 'status');
+        t.setAttribute('aria-live', 'polite');
+        t.style.background = '#111827';
+        t.style.color = '#fff';
+        t.style.padding = '12px 14px';
+        t.style.borderRadius = '10px';
+        t.style.boxShadow = '0 8px 20px rgba(2,6,23,0.4)';
+        t.innerHTML = `<div style="display:flex;gap:12px;align-items:center"><div>Há <strong>${count}</strong> vencimento(s) nos próximos ${DUE_THRESHOLD_DAYS} dias</div><div><button class="btn" style="margin-left:8px" id="toast-view-btn">Ver</button></div></div>`;
+        container.appendChild(t);
+        const btn = t.querySelector('#toast-view-btn');
+        if (btn) btn.addEventListener('click', (e) => { navTo('transactions'); try { t.remove(); } catch (e) { } });
+        // auto dismiss after 8s
+        setTimeout(() => { try { t.remove(); } catch (e) { } }, 8000);
+    }
+    catch (e) { }
+}
 function calc() {
     const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.value, 0);
     const expense = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.value, 0);
@@ -274,6 +287,10 @@ function calc() {
 }
 function render() {
     const { income, expense, saldo, taxa } = calc();
+    // compute which transactions are due soon and update badge/toast
+    DUE_SOON_IDS = computeDueSoon(DUE_THRESHOLD_DAYS);
+    try { updateDueBadge(DUE_SOON_IDS.size); } catch (e) { }
+    try { if (!sessionStorage.getItem('shownDueSoonToast') && DUE_SOON_IDS.size > 0) { showDueSoonToast(DUE_SOON_IDS.size); sessionStorage.setItem('shownDueSoonToast','1'); } } catch (e) { }
     saldoEl.textContent = formatMoney(saldo);
     cardSaldo.textContent = `R$ ${formatMoney(saldo)}`;
     cardRenda.textContent = `R$ ${formatMoney(income)}`;
@@ -309,8 +326,9 @@ function render() {
         return;
     }
     txs.slice().reverse().forEach(t => {
-        const div = document.createElement('div');
-        div.className = 'tx';
+    const div = document.createElement('div');
+    div.className = 'tx';
+    if (DUE_SOON_IDS && DUE_SOON_IDS.has && DUE_SOON_IDS.has(t.id)) div.classList.add('due-soon');
     let installmentInfo = '';
         let rightAmount = t.value;
     // Only build installment info for expenses; incomes should only show the date
@@ -389,7 +407,7 @@ function render() {
         `;
         recentBox.appendChild(div);
     });
-    renderUpcoming();
+    // Upcoming notices removed per user request
 }
 function getStartDate(t) {
     // prefer explicit dueDate (ISO yyyy-mm-dd from input[type=date]) otherwise parse displayed date (dd/mm/yyyy)
@@ -403,113 +421,7 @@ function getStartDate(t) {
         return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
     return new Date();
 }
-function renderUpcoming() {
-    const el = document.getElementById('upcoming-notices');
-    if (!el)
-        return;
-    // collect upcoming unpaid installments: {id, desc, dueDate, daysLeft, amount}
-    const list = [];
-    // prefer network time (more trustworthy than client clock) with local fallback
-    // prefer network time (more trustworthy than client clock) with local fallback
-    async function getNetworkNow() {
-        try {
-            const res = await fetch('https://worldtimeapi.org/api/ip');
-            if (!res.ok)
-                throw new Error('ntp fetch failed');
-            const j = await res.json();
-            if (j && j.datetime)
-                return new Date(j.datetime);
-        }
-        catch (e) { /* ignore and fallback */ }
-        return new Date();
-    }
-    // Helper: render using a provided 'today' so we can render immediately with local time
-    function renderWithToday(today) {
-        // compute unpaid installments for all expense transactions (no -30d cutoff)
-        const totalTxs = txs.length;
-        const expenseCount = txs.filter(x => x.type === 'expense').length;
-        const explicitCount = txs.filter(x => x._dueDateExplicit).length;
-        let upcomingFound = 0;
-        const localList = [];
-        txs.forEach(t => {
-            // Only include expenses where the user explicitly set a due date.
-            // We do not show incomes or other types even if they have a dueDate.
-            if (t.type !== 'expense') return;
-            if (!t._dueDateExplicit || !t.dueDate) return;
-            const startDt = getStartDate(t);
-            const totalInst = t.installmentsTotal && t.installmentsTotal > 1 ? t.installmentsTotal : 1;
-            const per = t.perInstallment || (t.value / totalInst);
-            const paid = t.installmentsPaid || 0;
-                // compute remaining installments count and remaining total
-                const remainingCount = Math.max(0, totalInst - paid);
-                const remainingTotal = per * remainingCount;
-                let addedAny = false;
-                for (let k = paid; k < totalInst; k++) {
-                    const instDt = new Date(startDt.getFullYear(), startDt.getMonth() + k, startDt.getDate());
-                    const diff = Math.ceil((instDt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                    // only include installments that are today..31 days ahead
-                    if (diff >= 0 && diff <= 31) {
-                        localList.push({ id: t.id, desc: t.desc, due: instDt, days: diff, amount: per, category: t.category, remainingCount, remainingTotal });
-                        upcomingFound++;
-                        addedAny = true;
-                    }
-                }
-                // Fallback: if no installment fell into the 0..31 window but the next unpaid
-                // installment (based on startDt + paid months) is within the window, include it.
-                if (!addedAny && paid < totalInst) {
-                    const nextIdx = paid;
-                    const nextDt = new Date(startDt.getFullYear(), startDt.getMonth() + nextIdx, startDt.getDate());
-                    const nextDiff = Math.ceil((nextDt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                    if (nextDiff >= 0 && nextDiff <= 31) {
-                        localList.push({ id: t.id, desc: t.desc, due: nextDt, days: nextDiff, amount: per, category: t.category, remainingCount, remainingTotal });
-                        upcomingFound++;
-                    }
-                }
-        });
-        // sort by due date ascending
-        localList.sort((a, b) => a.due.getTime() - b.due.getTime());
-        // show list
-        if (localList.length === 0) {
-              el.innerHTML = `<div class="notice">Sem vencimentos próximos</div>`;
-            return;
-        }
-                el.innerHTML = localList.map(it => {
-                        const d = it.due;
-                        const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-                        const daysText = it.days > 0 ? `${it.days} dias` : (it.days === 0 ? 'hoje' : `${Math.abs(it.days)} dias atras`);
-                        const urgent = it.days <= 3 ? 'urgent' : '';
-                        const icon = categoryIcon(it.category);
-                        // show per-installment amount and remaining total to pay (if > 0)
-                        const remainingHtml = it.remainingTotal && it.remainingTotal > 0 ? `<div class="meta">Falta pagar: <strong>R$ ${formatMoney(it.remainingTotal)}</strong></div>` : '';
-                        // stacked layout: title, amount, due line
-                        return `
-                            <div class="notice ${urgent}">
-                                ${icon}
-                                <div class="notice-body">
-                                    <div class="notice-title"><strong>${it.desc}</strong></div>
-                                    <div class="meta">Valor: R$ ${formatMoney(it.amount)}</div>
-                                    ${remainingHtml}
-                                    <div class="meta">Vence: ${label} (${daysText})</div>
-                                </div>
-                            </div>
-                        `;
-                }).join('');
-    }
-    // First render immediately using client clock so UI is responsive
-    renderWithToday(new Date());
-    // Then try to fetch network time and re-render if it differs (to be more accurate)
-    (async () => {
-        try {
-            const net = await getNetworkNow();
-            // if date portion differs, re-render
-            if (net.toDateString() !== (new Date()).toDateString()) {
-                renderWithToday(net);
-            }
-        }
-        catch (e) { /* ignore */ }
-    })();
-    // No fallback: we intentionally don't list distant/unbounded installments here.
-}
+// renderUpcoming removed
 function renderAllTransactions() {
     const box = document.getElementById('all-transactions-box');
     if (!box)
@@ -522,22 +434,32 @@ function renderAllTransactions() {
         txs.slice().reverse().forEach(t => {
                 const row = document.createElement('div');
                 row.className = 'tx';
-                // build installment block if needed
-                let instBlock = '';
-                if (t.installmentsTotal && Number(t.installmentsTotal) > 1) {
-                        const paid = Number(t.installmentsPaid || 0);
-                        const total = Number(t.installmentsTotal || 0);
-                        const left = Math.max(0, total - paid);
-                        const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / total));
-                        const remaining = per * left;
-                        const current = left > 0 ? (paid + 1) : total;
-                        instBlock = `
-                                <div class="meta">Parcelas: ${current}/${total}</div>
-                                <div class="meta">Pagas: ${paid}</div>
-                                <div class="meta">Faltam: ${left}</div>
-                                <div class="meta">Total a pagar: R$ ${formatMoney(remaining)}</div>
-                        `;
-                }
+                if (DUE_SOON_IDS && DUE_SOON_IDS.has && DUE_SOON_IDS.has(t.id)) row.classList.add('due-soon');
+        // build installment block; if installmentsTotal is not provided, show zeros per user request
+        let instBlock = '';
+        if (t.installmentsTotal === undefined || t.installmentsTotal === null || t.installmentsTotal === '') {
+            // Always show zeros when user did not provide installments
+            instBlock = `
+                <div class="meta">Parcelas: 0/0</div>
+                <div class="meta">Pagas: 0</div>
+                <div class="meta">Faltam: 0</div>
+                <div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>
+            `;
+        }
+        else if (Number(t.installmentsTotal) > 1) {
+            const paid = Number(t.installmentsPaid || 0);
+            const total = Number(t.installmentsTotal || 0);
+            const left = Math.max(0, total - paid);
+            const per = Number((t.perInstallment !== undefined && t.perInstallment !== null && t.perInstallment !== '') ? t.perInstallment : (t.value / total));
+            const remaining = per * left;
+            const current = left > 0 ? (paid + 1) : total;
+            instBlock = `
+                <div class="meta">Parcelas: ${current}/${total}</div>
+                <div class="meta">Pagas: ${paid}</div>
+                <div class="meta">Faltam: ${left}</div>
+                <div class="meta">Total a pagar: R$ ${formatMoney(remaining)}</div>
+            `;
+        }
                 const dueLabel = t.dueDate ? (() => { const p = (t.dueDate || '').split('-'); if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`; return t.dueDate; })() : '';
                 const vencLine = dueLabel ? `<div class="meta">Venc.: ${dueLabel}</div>` : `<div class="meta">Venc.: —</div>`;
                 row.innerHTML = `
@@ -812,3 +734,5 @@ try{
 }catch(e){/* ignore */}
 
 load();
+// ensure notify button is created after initial load
+try { ensureNotifyButton(); } catch (e) { }

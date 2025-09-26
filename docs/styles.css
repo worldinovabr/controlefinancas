@@ -128,6 +128,17 @@
   --shadow-light: rgba(255,255,255,0.9);
   --shadow-dark: rgba(163,177,198,0.45);
 }
+/* Due-soon highlight */
+.tx.due-soon{border-left:4px solid var(--danger);background:rgba(239,68,68,0.03)}
+
+/* badge in header for upcoming due items */
+.due-badge{display:none;align-items:center;font-size:13px;color:var(--muted);gap:8px}
+.due-badge .label{font-weight:600;margin-right:6px}
+.due-badge .count{background:var(--danger);color:#fff;border-radius:999px;padding:2px 8px;font-size:12px}
+
+/* toast container */
+#toast-container{position:fixed;right:18px;bottom:18px;z-index:9999}
+.toast{min-width:220px}
 /* utility to hide sections controlled by JS */
 .hidden{display:none !important}
 *{box-sizing:border-box}
