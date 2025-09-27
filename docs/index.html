@@ -108,12 +108,7 @@
             <!-- compact transactions removed per request -->
           </div>
       </div>
-      <div class="card upcoming-card">
-        <div class="card-title">Vencimentos Próximos</div>
-        <div class="card-body">
-          <div id="upcoming-notices">Sem vencimentos próximos</div>
-        </div>
-      </div>
+      <!-- Upcoming card removed per user request -->
     </section>
 
     <section class="month-summary">
@@ -443,6 +438,16 @@
             }
       const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
       const dateLine = t.date ? `<div class="meta">Data: ${t.date}</div>` : (dueLabel ? `<div class="meta">Data: ${dueLabel}</div>` : `<div class="meta">Data: —</div>`);
+      // presentation-only fallback: check if due soon (7 days)
+      function isDueSoonLocal(tx, days){ try{ days = typeof days === 'number' ? days : 7; const s = (tx && tx.dueDate) ? (function(){ const p=(tx.dueDate||'').split('-'); if(p.length===3) return new Date(Number(p[0]),Number(p[1])-1,Number(p[2])); return new Date(tx.dueDate); })() : (tx && tx.date ? (function(){ const p=(tx.date||'').split('/'); if(p.length===3) return new Date(Number(p[2]),Number(p[1])-1,Number(p[0])); return null; })() : null); if(!s) return false; const now=new Date(); const today=new Date(now.getFullYear(),now.getMonth(),now.getDate()); const diffDays=Math.ceil((s - today)/(1000*60*60*24)); return diffDays>=0 && diffDays<=days; }catch(e){return false} }
+      let vencLine = '';
+      if(t.type === 'expense' && dueLabel){
+        const isSoon = (typeof isDueSoon === 'function') ? isDueSoon(t) : isDueSoonLocal(t);
+        if(isSoon) vencLine = `<div class="meta">Venc.: <span class="due-date-wrap"><span class="due-date">${dueLabel}</span></span></div>`;
+        else vencLine = `<div class="meta">Venc.: ${dueLabel}</div>`;
+      } else {
+        vencLine = t.type === 'expense' && dueLabel ? `<div class="meta">Venc.: ${dueLabel}</div>` : '';
+      }
       const singleMeta = (t.type === 'expense') ? `
         <div class="meta">Parcelas: 1/1</div>
         <div class="meta">Pagas: ${t.installmentsPaid || 0}</div>
@@ -454,7 +459,7 @@
                 <div class="cat-inline">${categoryIcon(t.category)} <strong class="cat-name">${t.category || '—'}</strong></div>
                 <strong>${t.desc}</strong>
                 ${dateLine}
-                ${dueLabel ? `<div class="meta">Venc.: ${dueLabel}</div>` : ''}
+                ${vencLine}
                 ${installmentInfo || singleMeta}
               </div>
               <div style="text-align:right">
@@ -575,11 +580,20 @@
         box.innerHTML = '';
         if(txs.length===0){ box.innerHTML = '<div class="empty">Nenhuma transação registrada</div>'; return }
         
-          txs.slice().reverse().forEach(t=>{
+      txs.slice().reverse().forEach(t=>{
             const row = document.createElement('div');
             row.className = 'tx';
             let installmentInfo = '';
-            if(t.installmentsTotal && t.installmentsTotal>1){
+            // If installmentsTotal is missing, show zeros as requested
+            if(t.installmentsTotal === undefined || t.installmentsTotal === null || t.installmentsTotal === ''){
+              installmentInfo = `
+                <div class="meta">Parcelas: 0/0</div>
+                <div class="meta">Pagas: 0</div>
+                <div class="meta">Faltam: 0</div>
+                <div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>
+              `;
+            }
+            else if(t.installmentsTotal && t.installmentsTotal>1){
               const paid = Number(t.installmentsPaid || 0);
               const totalInst = Number(t.installmentsTotal || 0);
               const left = Math.max(0, totalInst - paid);
@@ -594,18 +608,26 @@
             }
   const dueLabel = t.dueDate ? (function(){ var p = (t.dueDate||'').split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; return t.dueDate; })() : '';
   const dateLine = t.date ? `<div class="meta">Data: ${t.date}</div>` : '';
+  // presentation-only fallback for due-soon detection (mirror recent view)
+  function isDueSoonLocal(tx, days){ try{ days = typeof days === 'number' ? days : 7; const s = (tx && tx.dueDate) ? (function(){ const p=(tx.dueDate||'').split('-'); if(p.length===3) return new Date(Number(p[0]),Number(p[1])-1,Number(p[2])); return new Date(tx.dueDate); })() : (tx && tx.date ? (function(){ const p=(tx.date||'').split('/'); if(p.length===3) return new Date(Number(p[2]),Number(p[1])-1,Number(p[0])); return null; })() : null); if(!s) return false; const now=new Date(); const today=new Date(now.getFullYear(),now.getMonth(),now.getDate()); const diffDays=Math.ceil((s - today)/(1000*60*60*24)); return diffDays>=0 && diffDays<=days; }catch(e){return false} }
       const singleMeta = (t.type === 'expense') ? `
         <div class="meta">Parcelas: 1/1</div>
         <div class="meta">Pagas: ${t.installmentsPaid || 0}</div>
         <div class="meta">Faltam: ${Math.max(0, 1 - (t.installmentsPaid || 0))}</div>
         <div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>
       ` : '';
+            let vencHtml = '';
+            if(t.type === 'expense' && dueLabel){
+              const isSoon = (typeof isDueSoon === 'function') ? isDueSoon(t) : isDueSoonLocal(t);
+              if(isSoon) vencHtml = `<div class="meta">Venc.: <span class="due-date-wrap"><span class="due-date">${dueLabel}</span></span></div>`;
+              else vencHtml = `<div class="meta">Venc.: ${dueLabel}</div>`;
+            }
             row.innerHTML = `
               <div>
                 <div class="cat-inline">${categoryIcon(t.category)} <strong class="cat-name">${t.category || '—'}</strong></div>
                 <strong>${t.desc}</strong>
                 ${dateLine}
-                ${t.type === 'expense' && dueLabel ? `<div class="meta">Venc.: ${dueLabel}</div>` : ''}
+                ${vencHtml}
                 ${t.type === 'expense' ? (installmentInfo || singleMeta) : ''}
               </div>
               <div style="text-align:right">
@@ -627,128 +649,7 @@
         return new Date();
       }
 
-      function renderUpcoming(){
-        const el = document.getElementById('upcoming-notices');
-        if(!el) return;
-        const list = [];
-        // prefer network time with local fallback
-        async function getNetworkNow(){
-          try{ const r = await fetch('https://worldtimeapi.org/api/ip'); if(r.ok){ const j = await r.json(); if(j && j.datetime) return new Date(j.datetime); } }catch(e){}
-          return new Date();
-        }
-        function renderWithToday(today){
-          const totalTxs = txs.length;
-          const expenseCount = txs.filter(x=>x.type==='expense').length;
-          const explicitCount = txs.filter(x=>x._dueDateExplicit).length;
-          let upcomingFound = 0;
-          const localList = [];
-          txs.forEach(function(t){
-            // Include any transaction that has an explicit due date so incomes
-            // or other entries with a dueDate will appear in upcoming notices.
-            if(!t._dueDateExplicit && !t.dueDate) return;
-            const startDt = getStartDate(t);
-            const totalInst = t.installmentsTotal && t.installmentsTotal>1 ? t.installmentsTotal : 1;
-            const per = t.perInstallment || (t.value / totalInst);
-            const paid = t.installmentsPaid || 0;
-                for(var k=paid;k<totalInst;k++){
-                  const instDt = new Date(startDt.getFullYear(), startDt.getMonth()+k, startDt.getDate());
-                  const diff = Math.ceil((instDt.getTime()-today.getTime())/(1000*60*60*24));
-                  // only include installments between today and the next 31 days
-                  if(diff >= 0 && diff <= 31){
-                    localList.push({ id: t.id, desc: t.desc, due: instDt, days: diff, amount: per });
-                    upcomingFound++;
-                  }
-                }
-          });
-          localList.sort((a,b)=>a.due.getTime()-b.due.getTime());
-          if(localList.length===0){
-            el.innerHTML = `<div class="notice">Sem vencimentos próximos</div>`; return;
-          }
-          el.innerHTML = localList.map(function(it){
-            const d = it.due;
-            const label = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-            const daysText = it.days>0? `${it.days} dias` : (it.days===0? 'hoje' : `${Math.abs(it.days)} dias atras`);
-            const urgent = it.days<=3 ? 'urgent' : '';
-            // stacked layout
-            return `<div class="notice ${urgent}">${categoryIcon(it.category)}<div class="notice-body"><div class="notice-title"><strong>${it.desc}</strong></div><div class="meta">Valor: R$ ${formatMoney(it.amount)}</div>${it.remainingTotal && it.remainingTotal>0 ? `<div class="meta">Falta pagar: <strong>R$ ${formatMoney(it.remainingTotal)}</strong></div>` : ''}<div class="meta">Vence: ${label} (${daysText})</div></div></div>`;
-          }).join('');
-        }
-        // immediate render with client clock
-        renderWithToday(new Date());
-        // re-render with network time if differs
-        (async function(){ try{ const now = await getNetworkNow(); if(now.toDateString() !== (new Date()).toDateString()) renderWithToday(now); }catch(e){} })();
-        // No fallback: only show installments in the 0..31 day window
-      }
-
-      // debug helper exposed to window
-      async function inspectTxs(){
-        try{
-          const raw = localStorage.getItem(KEY);
-          const list = raw? JSON.parse(raw) : [];
-          let today = new Date();
-          try{ const r = await fetch('https://worldtimeapi.org/api/ip'); if(r.ok){ const j = await r.json(); if(j && j.datetime) today = new Date(j.datetime); } }catch(e){}
-          console.group('inspectTxs - now', today.toString());
-          if(!list.length){ console.log('no transactions'); console.groupEnd(); return }
-          list.forEach((t,idx)=>{
-            const startDt = (function(){ if(t.dueDate){ const p=(t.dueDate||'').split('-'); if(p.length===3) return new Date(Number(p[0]), Number(p[1])-1, Number(p[2])); } const pd=(t.date||'').split('/'); if(pd.length===3) return new Date(Number(pd[2]), Number(pd[1])-1, Number(pd[0])); return null; })();
-            const totalInst = t.installmentsTotal && t.installmentsTotal>1 ? t.installmentsTotal : 1;
-            const paid = t.installmentsPaid || 0;
-            const insts = [];
-            let includeAny = false;
-            for(let k=paid;k<totalInst;k++){
-              if(!startDt) break;
-              const instDt = new Date(startDt.getFullYear(), startDt.getMonth()+k, startDt.getDate());
-              const diff = Math.ceil((instDt.getTime()-today.getTime())/(1000*60*60*24));
-              const include = diff >= -30; if(include) includeAny = true;
-              insts.push({ installment:k+1, due:instDt.toLocaleDateString(), days:diff, include });
-            }
-            console.group(`tx[${idx}] ${t.desc} (${t.type}) id=${t.id}`);
-            console.log('raw', t);
-            console.log('startDateParsed', startDt ? startDt.toString() : '(none)');
-            console.log('unpaidInstallments', insts);
-            console.log('will appear in upcoming?', includeAny);
-            console.groupEnd();
-          });
-          console.groupEnd();
-        }catch(e){ console.error(e) }
-      }
-      window.inspectTxs = inspectTxs;
-
-      // Render a lightweight inspection summary into the page so users
-      // who won't open DevTools can still see why the upcoming card is
-      // empty or which installments are detected.
-      function showInspectOnPage(){
-        try{
-          const raw = localStorage.getItem(KEY);
-          const list = raw? JSON.parse(raw) : [];
-          const outEl = document.getElementById('upcoming-inspect');
-          if(!outEl) return;
-          if(!list.length){ outEl.innerHTML = '<div class="muted">Nenhuma transação no armazenamento local</div>'; return }
-          const now = new Date();
-          let html = '<div style="font-weight:600;margin-bottom:6px">Diagnóstico (visível)</div>';
-          list.forEach(function(t,idx){
-            const startDt = (function(){ if(t.dueDate){ const p=(t.dueDate||'').split('-'); if(p.length===3) return new Date(Number(p[0]), Number(p[1])-1, Number(p[2])); } const pd=(t.date||'').split('/'); if(pd.length===3) return new Date(Number(pd[2]), Number(pd[1])-1, Number(pd[0])); return null; })();
-            const totalInst = t.installmentsTotal && t.installmentsTotal>1 ? t.installmentsTotal : 1;
-            const paid = t.installmentsPaid || 0;
-            html += `<div style="margin-bottom:6px"><strong>${t.desc||'(sem descrição)'}</strong> — ${t.type || '—'}<div style="margin-left:8px">`;
-            if(!startDt) html += '<div class="muted">sem data/vencimento</div>';
-            else {
-              // show only the next unpaid installment (no "Parcela X/Y" text)
-              const k = paid;
-              if(k < totalInst){
-                const instDt = new Date(startDt.getFullYear(), startDt.getMonth()+k, startDt.getDate());
-                const diff = Math.ceil((instDt.getTime() - now.getTime())/(1000*60*60*24));
-                const daysText = diff>0? `${diff} dias` : (diff===0? 'hoje' : `${Math.abs(diff)} dias atras`);
-                html += `<div>vence ${instDt.toLocaleDateString()} — ${daysText}</div>`;
-              } else {
-                html += '<div class="muted">todas parcelas pagas</div>';
-              }
-            }
-            html += '</div></div>';
-          });
-          outEl.innerHTML = html;
-        }catch(e){ console.error(e) }
-      }
+      // Upcoming-related inline helpers and UI removed per user request
 
       function renderReports(){
         const canvas = document.getElementById('chart-income-expense');
@@ -842,8 +743,7 @@
   // Ensure upcoming notices and the on-page diagnostic are shown without
   // requiring the user to open DevTools. Also update the global render to
   // include upcoming and diagnostics so manual calls reflect both areas.
-  try{ renderUpcoming(); }catch(e){}
-  window.render = function(){ render(); try{ renderUpcoming(); }catch(e){} };
+  window.render = function(){ render(); };
       // hook report filter buttons
       try{
         const btnFilter = document.getElementById('report-filter');
