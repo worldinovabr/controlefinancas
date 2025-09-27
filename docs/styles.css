@@ -199,7 +199,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 
 /* Slightly larger nav icons across the header (override earlier rules) */
 .nav-item .nav-img, .nav-item .nav-icon { width:36px !important; height:36px !important; }
-.nav-item.active{background:linear-gradient(180deg,#06b6d4,#0ea5e9);color:#fff;padding:8px 16px;border-radius:12px;box-shadow: inset 6px 6px 20px rgba(0,0,0,0.24), inset -6px -6px 20px rgba(255,255,255,0.02)}
+.nav-item.active{background:linear-gradient(180deg,#404fc1,#3a389c);color:#fff;padding:8px 16px;border-radius:12px;box-shadow: inset 6px 6px 20px rgba(0,0,0,0.24), inset -6px -6px 20px rgba(255,255,255,0.02)}
 .topbar .saldo{
   font-size:20px;
   text-align:start;
@@ -255,7 +255,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .controls-center .btn-group:last-child{margin-left:auto}
 /* Install button in the header */
 .btn.install{
-  position:relative;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,#f8fbfe,#eef6fb);box-shadow:8px 8px 18px rgba(163,177,198,0.28), -8px -8px 18px rgba(255,255,255,0.9);border:none;color:#0ea5e9;font-weight:700;margin-left:12px}
+  position:relative;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,#f8fbfe,#eef6fb);box-shadow:8px 8px 18px rgba(163,177,198,0.28), -8px -8px 18px rgba(255,255,255,0.9);border:none;color:#0f172a;font-weight:700;margin-left:12px}
 .btn.install.hidden{display:none !important}
 .install-tooltip{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:rgba(16,24,40,0.95);color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 24px rgba(16,24,40,0.2);z-index:9999}
 .install-banner{position:fixed;left:12px;right:12px;bottom:18px;background:linear-gradient(90deg,#06b6d4,#0ea5e9);color:#fff;border-radius:12px;box-shadow:0 12px 30px rgba(16,24,40,0.18);z-index:10000}
@@ -263,7 +263,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .install-banner-text{flex:1;font-weight:700}
 .install-banner-actions{display:flex;gap:8px}
 .install-banner .btn.small{padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.18)}
-.install-banner .btn.small.btn-install-now{background:linear-gradient(180deg,#fff,#eef4fb);color:#0ea5e9;border-color:transparent}
+.install-banner .btn.small.btn-install-now{background:linear-gradient(180deg,#fff,#eef4fb);color:#0f172a;border-color:transparent}
 
 .btn{border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg,var(--card),#eef4fb);padding:8px 12px;border-radius:12px;cursor:pointer;box-shadow:4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light)}
 .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
@@ -329,7 +329,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .star-meter{ display:flex; align-items:center; justify-content:center; gap:8px; font-size:36px; }
 .star-meter .star{ color: rgba(0,0,0,0.18); text-shadow: none; cursor:default; font-size:1em; }
 .star-meter .star.filled{ color: #FFD166; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.05)); }
-.star-meter .star-pct{ margin-left:8px; font-weight:700; color: #0ea5e9; font-size:13px }
+.star-meter .star-pct{ margin-left:8px; font-weight:700; color: #0f172a; font-size:13px }
 .star-meter .star:hover{ transform: none }
 
 @media (max-width:480px){
@@ -563,9 +563,9 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .nav-item:focus{outline:3px solid rgba(21,128,61,0.14);outline-offset:4px}
 .nav-item .nav-img{width:30px;height:30px}
 .nav-icon{width:30px;height:28px}
-.nav-label{font-size:13px;color:#151616;font-weight:600}
+.nav-label{font-size:13px;color:#0f172a;font-weight:600}
 .nav-item.active{
-  background: linear-gradient(180deg,#06b6d4,#0ea5e9);
+  background: linear-gradient(180deg,#0b1220,#0f172a);
   color:#fff;
   transform: translateY(-2px) scale(1.01);
   box-shadow: inset 8px 8px 26px rgba(0,0,0,0.22), inset -8px -8px 26px rgba(255,255,255,0.03);
@@ -623,7 +623,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .card.credit-card.credit-bg{position:relative;padding:32px 28px;border-radius:18px;overflow:visible;/* prefer user local copy, then docs/img, then CDN */background-image: url('file:///C:/Users/wesle/Downloads/cartao.png'), url('img/card-bg.png'), url('https://img.icons8.com/fluency/340/000000/credit-card.png');background-repeat:no-repeat;background-size:cover;background-position:center;min-height:240px}
 .card.credit-card.credit-bg .credit-bg-img{display:none}
 .card.credit-card .credit-overlay{position:absolute;inset:0;padding:0;color:transparent}
-.card.credit-card .credit-overlay .stat-box{position:absolute;background:#fff;color:#0ea5e9;padding:8px;border-radius:6px;box-shadow:0 6px 18px rgba(16,24,40,0.06);min-width:120px}
+.card.credit-card .credit-overlay .stat-box{position:absolute;background:#fff;color:#0f172a;padding:8px;border-radius:6px;box-shadow:0 6px 18px rgba(16,24,40,0.06);min-width:120px}
 .card.credit-card .credit-overlay .stat-box.small{min-width:120px;padding:8px}
 .card.credit-card .credit-overlay .stat-box.medium{min-width:160px;padding:10px}
 .card.credit-card .credit-overlay .stat-box.large{min-width:220px;padding:12px}
