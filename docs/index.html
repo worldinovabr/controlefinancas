@@ -793,6 +793,77 @@
     })();
   </script>
   <script src="app.js"></script>
+  <!-- Small runtime patch: if the inline app script is used (older inline version),
+       compute due-soon from localStorage and apply the visual wrapper so the
+       pulsing circle from styles.css becomes visible. This is presentation-only
+       and does not change app logic or storage. -->
+  <script>
+  (function(){
+    try{
+      const KEY = 'simple_dashboard_tx';
+      const DUE_THRESHOLD = 7;
+      function parseStartDate(t){
+        if(t.dueDate){ const p = (t.dueDate||'').split('-'); if(p.length===3) return new Date(Number(p[0]), Number(p[1])-1, Number(p[2])); const q = (t.dueDate||'').split('/'); if(q.length===3) return new Date(Number(q[2]), Number(q[1])-1, Number(q[0])); }
+        const parts = (t.date||'').split('/'); if(parts.length===3) return new Date(Number(parts[2]), Number(parts[1])-1, Number(parts[0]));
+        return new Date();
+      }
+      function getNextDueDateFromTx(t){
+        try{
+          // require either a dueDate or a date fallback
+          if(!t.dueDate && !t.date) return null;
+          const start = parseStartDate(t);
+          const total = (t.installmentsTotal && Number(t.installmentsTotal)>1) ? Number(t.installmentsTotal) : 1;
+          const paid = Number(t.installmentsPaid || 0);
+          if(paid >= total) return null;
+          const nextIdx = paid;
+          return new Date(start.getFullYear(), start.getMonth()+nextIdx, start.getDate());
+        }catch(e){return null}
+      }
+      function isDueSoonTx(t){
+        const next = getNextDueDateFromTx(t);
+        if(!next) return false;
+        const now = new Date();
+        const limit = new Date(now.getFullYear(), now.getMonth(), now.getDate() + DUE_THRESHOLD);
+        // normalize time portion
+        next.setHours(0,0,0,0);
+        now.setHours(0,0,0,0);
+        return next >= now && next <= limit;
+      }
+
+      function applyDueSoonWrappers(){
+        let stored = [];
+        try{ stored = JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ stored = []; }
+        if(!stored || !stored.length) return;
+        // find all meta lines that show "Venc." and replace the date text with wrapper
+        const metas = Array.from(document.querySelectorAll('.meta'));
+        metas.forEach(el => {
+          const txt = el.textContent || '';
+          if(txt.indexOf('Venc.') === -1) return;
+          const m = txt.match(/(\d{2}\/\d{2}\/\d{4})/);
+          if(!m) return;
+          const dateStr = m[1];
+          // find a stored tx whose formatted dueLabel matches this date
+          for(const t of stored){
+            const dueLabel = t.dueDate ? (function(){ const p = (t.dueDate||'').split('-'); if(p.length===3) return p[2] + '/' + p[1] + '/' + p[0]; return t.dueDate; })() : (t.date ? t.date : '');
+            if(dueLabel === dateStr && isDueSoonTx(t)){
+              // replace the first occurrence of the date string in the element's innerHTML
+              el.innerHTML = el.innerHTML.replace(dateStr, `<span class="due-date-wrap"><span class="due-date">${dateStr}</span></span>`);
+              break;
+            }
+          }
+        });
+      }
+
+      // Wrap the global render so the wrapper is applied after each render call
+      if(typeof window.render === 'function'){
+        const orig = window.render;
+        window.render = function(){ try{ orig(); }catch(e){} try{ applyDueSoonWrappers(); }catch(e){} };
+      }
+      // Also run once after load and again shortly after to cover timing races
+      window.addEventListener('load', function(){ try{ applyDueSoonWrappers(); }catch(e){} setTimeout(()=>{ try{ applyDueSoonWrappers(); }catch(e){} }, 250); });
+    }catch(e){/* ignore */}
+  })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // Dev helper: if you open the page with ?debug_toast=1 it will simulate an incoming push

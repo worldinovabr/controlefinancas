@@ -54,6 +54,24 @@ window.addEventListener('beforeinstallprompt', (e) => {
 // If app is already installed, hide the button
 // renderUpcoming removed
 function load() {
+    // Load persisted transactions first so we operate on real data (do not overwrite user data)
+    try {
+        const raw = localStorage.getItem(KEY);
+        if (raw) txs = JSON.parse(raw);
+    }
+    catch (e) { /* ignore parse errors */ }
+
+    // Normalize loaded transactions: ensure numeric fields are Numbers to avoid string concatenation
+    txs = txs.map(t => {
+        try {
+            t.value = Number(t.value) || 0;
+            t.installmentsTotal = (t.installmentsTotal === undefined || t.installmentsTotal === null || t.installmentsTotal === '') ? undefined : Number(t.installmentsTotal);
+            t.installmentsPaid = Number(t.installmentsPaid || 0) || 0;
+            t.perInstallment = (t.perInstallment === undefined || t.perInstallment === null || t.perInstallment === '') ? undefined : Number(t.perInstallment);
+        }
+        catch (e) { }
+        return t;
+    });
     // to appear in Upcoming when the user actually provided a due date.
     let migrated = 0;
     txs = txs.map(t => {
@@ -178,7 +196,8 @@ function computeDueSoon(thresholdDays) {
     const set = new Set();
     txs.forEach(t => {
         try {
-            if (!t.dueDate) return; // only consider explicit dueDate in MVP
+            // consider explicit dueDate or fallback to transaction date when dueDate absent
+            if (!t.dueDate && !t.date) return;
             const start = getStartDate(t);
             const total = t.installmentsTotal && Number(t.installmentsTotal) > 1 ? Number(t.installmentsTotal) : 1;
             const paid = Number(t.installmentsPaid || 0);
@@ -194,7 +213,8 @@ function computeDueSoon(thresholdDays) {
 
 function getNextDueDate(t) {
     try {
-        if (!t.dueDate) return null;
+        // require either an explicit dueDate or a fallback date
+        if (!t.dueDate && !t.date) return null;
         const start = getStartDate(t);
         const total = t.installmentsTotal && Number(t.installmentsTotal) > 1 ? Number(t.installmentsTotal) : 1;
         const paid = Number(t.installmentsPaid || 0);
@@ -418,6 +438,29 @@ function calc() {
     const taxa = income === 0 ? 0 : Math.round(((income - expense) / income) * 1000) / 10;
     return { income, expense, saldo, taxa };
 }
+
+// threshold in days to consider a due date "due soon"
+const DUE_THRESHOLD = 7;
+
+function getNextDueDate(t){
+    try{
+        if(!t.dueDate) return null;
+        const start = getStartDate(t);
+        const total = t.installmentsTotal && Number(t.installmentsTotal)>1 ? Number(t.installmentsTotal) : 1;
+        const paid = Number(t.installmentsPaid || 0);
+        if(paid >= total) return null;
+        const nextIdx = paid;
+        return new Date(start.getFullYear(), start.getMonth() + nextIdx, start.getDate());
+    }catch(e){return null}
+}
+
+function isDueSoon(t){
+    const next = getNextDueDate(t);
+    if(!next) return false;
+    const now = new Date();
+    const limit = new Date(now.getFullYear(), now.getMonth(), now.getDate() + DUE_THRESHOLD);
+    return next >= now && next <= limit;
+}
 function render() {
     const { income, expense, saldo, taxa } = calc();
     // compute which transactions are due soon and update badge/toast
@@ -543,10 +586,18 @@ function render() {
                 }
             }
     }
-            const dueLabel = (t._dueDateExplicit && t.dueDate) ? (() => { const p = t.dueDate.split('-'); if (p.length === 3)
-                return `${p[2]}/${p[1]}/${p[0]}`; return t.dueDate; })() : '';
-        // Only show vencimento for expenses when the user explicitly set a dueDate
-        const vencLine = (t.type === 'expense' && t._dueDateExplicit && dueLabel) ? `<div class="meta">Venc.: ${dueLabel}</div>` : '';
+            // prefer to show vencimento whenever a dueDate exists (including migrated entries)
+            const dueLabel = t.dueDate ? (() => { const p = (t.dueDate || '').split('-'); if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`; return t.dueDate; })() : '';
+            // Only show vencimento for expenses when there is a dueDate
+            let vencLine = '';
+            if (t.type === 'expense' && dueLabel) {
+                if (isDueSoon(t)) {
+                    vencLine = `<div class="meta">Venc.: <span class="due-date-wrap"><span class="due-date">${dueLabel}</span></span></div>`;
+                }
+                else {
+                    vencLine = `<div class="meta">Venc.: ${dueLabel}</div>`;
+                }
+            }
             // Only show Data if transaction has a stored date
             const dateLine = t.date ? `<div class="meta">Data: ${t.date}</div>` : '';
         // For single-payment transactions, only show total if it's an expense
@@ -579,9 +630,14 @@ function render() {
 function getStartDate(t) {
     // prefer explicit dueDate (ISO yyyy-mm-dd from input[type=date]) otherwise parse displayed date (dd/mm/yyyy)
     if (t.dueDate) {
-        const parts = (t.dueDate || '').split('-');
+        // try ISO yyyy-mm-dd first
+        let parts = (t.dueDate || '').split('-');
         if (parts.length === 3)
             return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        // fallback: maybe stored/displayed as dd/mm/yyyy
+        parts = (t.dueDate || '').split('/');
+        if (parts.length === 3)
+            return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
     }
     const parts = (t.date || '').split('/');
     if (parts.length === 3)
@@ -628,7 +684,14 @@ function renderAllTransactions() {
             `;
         }
                 const dueLabel = t.dueDate ? (() => { const p = (t.dueDate || '').split('-'); if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`; return t.dueDate; })() : '';
-                const vencLine = dueLabel ? `<div class="meta">Venc.: ${dueLabel}</div>` : `<div class="meta">Venc.: —</div>`;
+                let vencLine = `<div class="meta">Venc.: —</div>`;
+                if (dueLabel) {
+                    if (isDueSoon(t)) {
+                        vencLine = `<div class="meta">Venc.: <span class="due-date-wrap"><span class="due-date">${dueLabel}</span></span></div>`;
+                    } else {
+                        vencLine = `<div class="meta">Venc.: ${dueLabel}</div>`;
+                    }
+                }
                 row.innerHTML = `
             <div>
                 <div class="cat-inline">${categoryIcon(t.category)} <strong class="cat-name">${t.category || '—'}</strong></div>
