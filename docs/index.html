@@ -443,10 +443,10 @@
       let vencLine = '';
       if(t.type === 'expense' && dueLabel){
         const isSoon = (typeof isDueSoon === 'function') ? isDueSoon(t) : isDueSoonLocal(t);
-        if(isSoon) vencLine = `<div class="meta">Venc.: <span class="due-date-wrap"><span class="due-date">${dueLabel}</span></span></div>`;
-        else vencLine = `<div class="meta">Venc.: ${dueLabel}</div>`;
+  if(isSoon) vencLine = `<div class="meta">Venc.:&nbsp;<span class="due-date-wrap"><span class="due-date">${dueLabel}</span></span></div>`;
+  else vencLine = `<div class="meta">Venc.:&nbsp;${dueLabel}</div>`;
       } else {
-        vencLine = t.type === 'expense' && dueLabel ? `<div class="meta">Venc.: ${dueLabel}</div>` : '';
+  vencLine = t.type === 'expense' && dueLabel ? `<div class="meta">Venc.:&nbsp;${dueLabel}</div>` : '';
       }
       const singleMeta = (t.type === 'expense') ? `
         <div class="meta">Parcelas: 1/1</div>
@@ -619,8 +619,8 @@
             let vencHtml = '';
             if(t.type === 'expense' && dueLabel){
               const isSoon = (typeof isDueSoon === 'function') ? isDueSoon(t) : isDueSoonLocal(t);
-              if(isSoon) vencHtml = `<div class="meta">Venc.: <span class="due-date-wrap"><span class="due-date">${dueLabel}</span></span></div>`;
-              else vencHtml = `<div class="meta">Venc.: ${dueLabel}</div>`;
+              if(isSoon) vencHtml = `<div class="meta">Venc.:&nbsp;<span class="due-date-wrap"><span class="due-date">${dueLabel}</span></span></div>`;
+              else vencHtml = `<div class="meta">Venc.:&nbsp;${dueLabel}</div>`;
             }
             row.innerHTML = `
               <div>

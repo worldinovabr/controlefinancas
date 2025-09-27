@@ -264,9 +264,9 @@ function render() {
             if(t.type === 'expense' && t._dueDateExplicit && dueLabel){
                 const isSoon = (typeof isDueSoon === 'function') ? isDueSoon(t) : isDueSoonLocal(t);
                 if(isSoon){
-                    vencLine = `<div class="meta">Venc.: <span class="due-date-wrap"><span class="due-date">${dueLabel}</span></span></div>`;
+                    vencLine = `<div class="meta">Venc.:&nbsp;<span class="due-date-wrap"><span class="due-date">${dueLabel}</span></span></div>`;
                 } else {
-                    vencLine = `<div class="meta">Venc.: ${dueLabel}</div>`;
+                    vencLine = `<div class="meta">Venc.:&nbsp;${dueLabel}</div>`;
                 }
             }
             // Only show Data if transaction has a stored date

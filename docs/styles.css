@@ -857,7 +857,7 @@ body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);mar
 .recent-box .tx strong{display:block}
 .recent-box .tx .meta{font-size:12px;color:var(--muted);margin-top:6px}
 /* Ensure each meta line appears as its own block with consistent spacing */
-.tx .meta{display:block;margin:6px 0;color:var(--muted);font-size:12px;line-height:1.2}
+.tx .meta{display:block;margin:6px 0;color:var(--muted);font-size:12px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Slightly more prominent for the 'Total a pagar' line (use class .total) */
 .tx .meta.total{color:#444;font-weight:600}
 /* ensure right column has room and the amount will not be truncated on narrow screens */
