@@ -452,7 +452,7 @@
         <div class="meta">Parcelas: 1/1</div>
         <div class="meta">Pagas: ${t.installmentsPaid || 0}</div>
         <div class="meta">Faltam: ${Math.max(0, 1 - (t.installmentsPaid || 0))}</div>
-        <div class="meta total">Total a pagar: R$ ${formatMoney(t.value)}</div>
+        <div class="meta total">À pagar: R$ ${formatMoney(t.value)}</div>
       ` : '';
             div.innerHTML = `
               <div>

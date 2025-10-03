@@ -313,7 +313,7 @@ function render() {
                             <div class="meta">Parcelas: 0/0</div>
                             <div class="meta">Pagas: 0</div>
                             <div class="meta">Faltam: 0</div>
-                            <div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>
+                            <div class="meta">À pagar: R$ ${formatMoney(t.value)}</div>
                         `;
                         rightAmount = t.value;
             }
@@ -427,7 +427,7 @@ function renderAllTransactions() {
                 <div class="meta">Parcelas: 0/0</div>
                 <div class="meta">Pagas: 0</div>
                 <div class="meta">Faltam: 0</div>
-                <div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>
+                <div class="meta">À pagar: R$ ${formatMoney(t.value)}</div>
             `;
         }
         else if (Number(t.installmentsTotal) > 1) {
