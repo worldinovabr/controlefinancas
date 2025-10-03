@@ -34,6 +34,58 @@ function hideInstallButton() {
     installBtn.classList.add('hidden');
     installBtn.setAttribute('aria-hidden', 'true');
 }
+// Check if app is installable on load
+function checkInstallability() {
+    // Check if app is already installed (standalone mode)
+    if (window.matchMedia('(display-mode: standalone)').matches || 
+        window.navigator.standalone === true) {
+        hideInstallButton();
+        return;
+    }
+    
+    // Check if running in mobile browser and not installed
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches;
+    const isIOSStandalone = window.navigator.standalone === true;
+    
+    // Show install button only if not installed and is installable
+    if (!isInStandaloneMode && !isIOSStandalone) {
+        // Always show on mobile or when we have service worker support (PWA capable)
+        if (isMobile || deferredPrompt || ('serviceWorker' in navigator && window.location.protocol === 'https:') || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            showInstallButton();
+            
+            // Auto-show install prompt after 2 seconds if not already shown
+            setTimeout(() => {
+                autoShowInstallPrompt();
+            }, 2000);
+        }
+    }
+}
+
+// Function to automatically show install prompt
+function autoShowInstallPrompt() {
+    // Check if user already dismissed or installed
+    const installDismissed = localStorage.getItem('installPromptDismissed');
+    
+    if (!installDismissed && deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'dismissed') {
+                // Mark as dismissed so we don't show again immediately
+                localStorage.setItem('installPromptDismissed', 'true');
+                // Clear the flag after 24 hours
+                setTimeout(() => {
+                    localStorage.removeItem('installPromptDismissed');
+                }, 24 * 60 * 60 * 1000);
+            } else if (choiceResult.outcome === 'accepted') {
+                // User accepted, hide the button
+                hideInstallButton();
+            }
+            deferredPrompt = null;
+        });
+    }
+}
+
 // Listener: when the browser fires beforeinstallprompt, capture it and show our button
 window.addEventListener('beforeinstallprompt', (e) => {
     // Prevent the mini-infobar from appearing on mobile
@@ -41,6 +93,50 @@ window.addEventListener('beforeinstallprompt', (e) => {
     deferredPrompt = e;
     showInstallButton();
 });
+
+// Listen for app installation
+window.addEventListener('appinstalled', () => {
+    hideInstallButton();
+    deferredPrompt = null;
+});
+
+// Handle install button click
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            try {
+                deferredPrompt.prompt();
+                const choiceResult = await deferredPrompt.userChoice;
+                if (choiceResult.outcome === 'accepted') {
+                    hideInstallButton();
+                }
+                deferredPrompt = null;
+            } catch (error) {
+                console.error('Installation failed:', error);
+            }
+        } else {
+            // Show platform-specific instructions and hide button
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            let instructions = '';
+            
+            if (userAgent.includes('safari') && isMobile) {
+                instructions = 'Para instalar no iPhone/iPad:\n\n1. Toque no botão Compartilhar (□↗)\n2. Role para baixo e toque "Adicionar à Tela de Início"\n3. Toque "Adicionar"';
+            } else if (userAgent.includes('chrome') && isMobile) {
+                instructions = 'Para instalar no Android:\n\n1. Toque no menu (⋮) do Chrome\n2. Toque "Adicionar à tela inicial" ou "Instalar app"';
+            } else if (userAgent.includes('chrome')) {
+                instructions = 'Para instalar no Chrome:\n\n1. Clique nos 3 pontos (⋮) no canto superior direito\n2. Clique "Instalar Controle Financeiro"';
+            } else {
+                instructions = 'Para instalar este app:\n\n• Chrome: Menu → "Instalar Controle Financeiro"\n• Safari (iOS): Compartilhar → "Adicionar à Tela de Início"\n• Edge: Menu → "Aplicativos" → "Instalar este site"';
+            }
+            
+            alert(instructions);
+            // Keep button visible so user can try again
+        }
+    });
+}
+
 // If app is already installed, hide the button
 // renderUpcoming removed
 function load() {
@@ -235,7 +331,7 @@ function render() {
                         <div class="meta">Parcelas: ${parcelasLine}</div>
                         <div class="meta">Pagas: ${paid}</div>
                         <div class="meta">Faltam: ${left}</div>
-                        <div class="meta">Total a pagar: R$ ${formatMoney(remaining)}</div>
+                        <div class="meta">À pagar: R$ ${formatMoney(remaining)}</div>
                     `;
                     // show remaining total on the right column so it's clearly visible
                     rightAmount = left > 0 ? remaining : t.value;
@@ -276,7 +372,7 @@ function render() {
                 <div class="meta">Parcelas: 1/1</div>
                 <div class="meta">Pagas: ${t.installmentsPaid || 0}</div>
                 <div class="meta">Faltam: ${Math.max(0, 1 - (t.installmentsPaid || 0))}</div>
-                <div class="meta">Total a pagar: R$ ${formatMoney(t.value)}</div>
+                <div class="meta">À pagar: R$ ${formatMoney(t.value)}</div>
             ` : '';
         div.innerHTML = `
             <div>
@@ -345,7 +441,7 @@ function renderAllTransactions() {
                 <div class="meta">Parcelas: ${current}/${total}</div>
                 <div class="meta">Pagas: ${paid}</div>
                 <div class="meta">Faltam: ${left}</div>
-                <div class="meta">Total a pagar: R$ ${formatMoney(remaining)}</div>
+                <div class="meta">À pagar: R$ ${formatMoney(remaining)}</div>
             `;
         }
                 const dueLabel = t.dueDate ? (() => { const p = (t.dueDate || '').split('-'); if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`; return t.dueDate; })() : '';
@@ -625,6 +721,10 @@ try{
 }catch(e){/* ignore */}
 
 load();
+
+// Check if app is installable when app starts
+checkInstallability();
+
 // Presentation-only helper: ensure the visual .due-date-wrap is present around
 // any displayed due date that is considered 'due soon'. This is purely
 // presentational and does not alter storage or transaction data.
